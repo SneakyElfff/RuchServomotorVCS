@@ -15,53 +15,62 @@ public class RuchVCS extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Создание корневого контейнера BorderPane
+        // создание корневого контейнера
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #04060a;");
 
-        // Создание вертикального контейнера для центрирования логотипа и кнопки
+        // создание вертикального контейнера для центрирования логотипа и кнопки
         VBox centerBox = new VBox(20);
         centerBox.setAlignment(Pos.CENTER);
 
-        // Добавление логотипа
         ImageView logo = new ImageView(new Image("file:src/main/resources/org/example/ruchservomotorvcs/logo.png"));
-        logo.setFitWidth(200); // Ширина логотипа
-        logo.setPreserveRatio(true); // Сохранение пропорций
+        logo.setFitWidth(200);
+        logo.setPreserveRatio(true); // сохранение пропорций
 
-        // Добавление кнопки "Войти"
+        Button loginButton = getLoginButton();
+
+        centerBox.getChildren().addAll(logo, loginButton);
+
+        // создание контейнера с отступом в 1 см для рамки
+        VBox paddedBox = new VBox(centerBox);
+        paddedBox.setAlignment(Pos.CENTER);
+        paddedBox.setStyle(
+                "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px; "
+        );
+
+        root.setCenter(paddedBox);
+
+        // создание контейнера для копирайта и центрирование его внизу
+        VBox bottomBox = new VBox();
+        bottomBox.setAlignment(Pos.CENTER);
+        bottomBox.setStyle("-fx-background-color: #04060a;");
+        Text copyrightText = new Text("© 2024 Developed by Nina Alhimovich");
+        copyrightText.setStyle("-fx-fill: white;");
+        bottomBox.getChildren().add(copyrightText);
+        root.setBottom(bottomBox);
+
+        // создание сцены с корневым контейнером
+        Scene scene = new Scene(root, 800, 600);
+        primaryStage.setTitle("Ruch VCS");
+        primaryStage.setScene(scene);
+
+        primaryStage.show();
+    }
+
+    private static Button getLoginButton() {
         Button loginButton = new Button("Войти");
+        loginButton.setMinWidth(200);
         loginButton.setStyle(
-                "-fx-font-size: 16px; " +
+                "-fx-font-size: 18px; " +
                         "-fx-background-color: #04060a; " +
                         "-fx-text-fill: #df6a1b; " +
                         "-fx-border-color: #df6a1b; " +
                         "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 5px; " +
-                        "-fx-background-radius: 5px;"
+                        "-fx-border-radius: 10px; "
         );
-
-        // Добавление логотипа и кнопки в контейнер для центрирования
-        centerBox.getChildren().addAll(logo, loginButton);
-
-        // Добавление центрального контейнера в BorderPane по центру
-        root.setCenter(centerBox);
-
-        // Создание контейнера для копирайта
-        Text copyrightText = new Text("© 2024 Developed by Nina Alhimovich");
-        copyrightText.setStyle("-fx-fill: white;");
-
-        // Добавление копирайта в BorderPane в нижнюю часть
-        root.setBottom(copyrightText);
-
-        // Создание сцены с корневым контейнером
-        Scene scene = new Scene(root, 800, 600);
-
-        // Установка заголовка окна
-        primaryStage.setTitle("Ruch VCS");
-        // Установка сцены в окно
-        primaryStage.setScene(scene);
-        // Отображение окна
-        primaryStage.show();
+        return loginButton;
     }
 
     public static void main(String[] args) {
