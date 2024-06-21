@@ -4,8 +4,6 @@ import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -14,6 +12,8 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class StartWindow extends Application {
+
+    private Scene scene;
 
     @Override
     public void start(Stage primaryStage) {
@@ -29,7 +29,7 @@ public class StartWindow extends Application {
         root.setBottom(creditsText);
 
         // Создание сцены с корневым контейнером
-        Scene scene = new Scene(root, 800, 600);
+        scene = new Scene(root, 800, 600);
         primaryStage.setTitle("Ruch VCS");
         primaryStage.setScene(scene);
 
@@ -88,74 +88,30 @@ public class StartWindow extends Application {
                         "-fx-cursor: hand;"
         );
 
-        loginButton.setOnAction(event -> showLoginFields(root));
+        loginButton.setOnAction(event -> showLoginFields());
 
         return loginButton;
     }
 
-    private void showLoginFields(BorderPane root) {
-        VBox loginBox = new VBox(10);
-        loginBox.setAlignment(Pos.CENTER);
+    private void showLoginFields() {
+        LoginWindow loginWindow = new LoginWindow();
+        BorderPane loginPane = loginWindow.createLoginPane(this::showStartWindow);
+        scene.setRoot(loginPane);
+    }
 
-        TextField usernameField = new TextField();
-        usernameField.setMaxWidth(200);
-        usernameField.setPromptText("Логин");
-        usernameField.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+    private void showStartWindow() {
+        BorderPane root = createRootPane();
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setMaxWidth(200);
-        passwordField.setPromptText("Пароль");
-        passwordField.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        // Создание вертикального контейнера для центрирования логотипа и кнопки
+        VBox centerBox = createCenterBox(root);
+        root.setCenter(centerBox);
 
-        Button submitButton = new Button("Войти");
-        submitButton.setMinWidth(200);
-        submitButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #df6a1b; " +
-                        "-fx-text-fill: #04060a; " +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+        // Создание контейнера для копирайта и центрирование его внизу
+        VBox creditsText = createCreditsText();
+        root.setBottom(creditsText);
 
-        Button backButton = new Button("<");
-        backButton.setMinWidth(40);
-        backButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #df6a1b; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
-
-        backButton.setOnAction(event -> {
-            VBox centerBox = createCenterBox(root);
-            root.setCenter(centerBox);
-            root.setTop(null); // Удалить кнопку Назад
-        });
-
-        usernameField.setFocusTraversable(false);
-        passwordField.setFocusTraversable(false);
-
-        loginBox.getChildren().addAll(usernameField, passwordField, submitButton);
-
-        root.setCenter(loginBox);
-        root.setTop(backButton);
+        // Установить корневой элемент обратно
+        scene.setRoot(root);
     }
 
     public static void main(String[] args) {
