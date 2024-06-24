@@ -2,6 +2,7 @@ package org.example.ruchservomotorvcs;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -10,7 +11,7 @@ import javafx.scene.layout.VBox;
 
 public class LoginWindow {
 
-    public BorderPane createLoginPane(Runnable onBack) {
+    public BorderPane createLoginPane(Runnable onBack, Runnable onLoginSuccess) {
         // Создание корневого контейнера
         BorderPane root = new BorderPane();
         root.setStyle(
@@ -22,7 +23,7 @@ public class LoginWindow {
         );
 
         // Создание полей ввода и кнопок
-        VBox loginBox = createLoginBox();
+        VBox loginBox = createLoginBox(onLoginSuccess);
         root.setCenter(loginBox);
 
         // Создание кнопки назад
@@ -32,7 +33,7 @@ public class LoginWindow {
         return root;
     }
 
-    private VBox createLoginBox() {
+    private VBox createLoginBox(Runnable onLoginSuccess) {
         VBox loginBox = new VBox(10);
         loginBox.setAlignment(Pos.CENTER);
 
@@ -60,6 +61,9 @@ public class LoginWindow {
                         "-fx-border-radius: 10px;"
         );
 
+        Label errorLabel = new Label();
+        errorLabel.setStyle("-fx-text-fill: red;");
+
         Button submitButton = new Button("Войти");
         submitButton.setMinWidth(200);
         submitButton.setStyle(
@@ -70,10 +74,19 @@ public class LoginWindow {
                         "-fx-cursor: hand;"
         );
 
+        submitButton.setOnAction(event -> {
+            if (usernameField.getText().isEmpty() || passwordField.getText().isEmpty()) {
+                errorLabel.setText("Пожалуйста, заполните все поля.");
+            } else {
+                errorLabel.setText("");
+                onLoginSuccess.run();
+            }
+        });
+
         usernameField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
 
-        loginBox.getChildren().addAll(usernameField, passwordField, submitButton);
+        loginBox.getChildren().addAll(usernameField, passwordField, submitButton, errorLabel);
         return loginBox;
     }
 

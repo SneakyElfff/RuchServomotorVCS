@@ -95,7 +95,7 @@ public class StartWindow extends Application {
 
     private void showLoginFields() {
         LoginWindow loginWindow = new LoginWindow();
-        BorderPane loginPane = loginWindow.createLoginPane(this::showStartWindow);
+        BorderPane loginPane = loginWindow.createLoginPane(this::showStartWindow, this::showMainWindow);
         scene.setRoot(loginPane);
     }
 
@@ -112,6 +112,12 @@ public class StartWindow extends Application {
 
         // Установить корневой элемент обратно
         scene.setRoot(root);
+    }
+
+    private void showMainWindow() {
+        MainWindow mainWindow = new MainWindow();
+        BorderPane mainPane = mainWindow.createMainPane();
+        scene.setRoot(mainPane);
     }
 
     public static void main(String[] args) {
