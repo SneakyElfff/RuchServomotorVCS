@@ -52,7 +52,7 @@ public class StartWindow extends Application {
         VBox centerBox = new VBox(20);
         centerBox.setAlignment(Pos.CENTER);
 
-        ImageView logo = new ImageView(new Image("file:src/main/resources/org/example/ruchservomotorvcs/logo.png"));
+        ImageView logo = new ImageView(new Image("file:src/main/resources/org/example/ruchservomotorvcs/images/logo.png"));
         logo.setFitWidth(200);
         logo.setPreserveRatio(true);
 

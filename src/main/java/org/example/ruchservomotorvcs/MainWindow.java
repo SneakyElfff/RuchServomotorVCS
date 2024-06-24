@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 
 public class MainWindow {
 
@@ -24,7 +25,7 @@ public class MainWindow {
                         "-fx-border-color: #df6a1b; " +
                         "-fx-border-width: 2px; " +
                         "-fx-border-radius: 10px; " +
-                        "-fx-padding: 10px;" // Внутренний отступ
+                        "-fx-padding: 30px;" // Внутренний отступ
         );
 
         // Создание контента для главного окна
@@ -40,14 +41,15 @@ public class MainWindow {
 
         // Создание таблицы
         TableView<ObservableList<Object>> table = new TableView<>();
-        table.setStyle(
-                "-fx-font-size: 14px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+
+        table.getStyleClass().add("edge-to-edge"); // Применяем класс стилей для рамки
+
+        String cssPath = Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm();
+        System.out.println("CSS Path: " + cssPath);
+        if (cssPath == null) {
+            throw new RuntimeException("Cannot find CSS file");
+        }
+        table.getStylesheets().add(cssPath);
 
         // Заполнение таблицы данными из базы данных
         try {

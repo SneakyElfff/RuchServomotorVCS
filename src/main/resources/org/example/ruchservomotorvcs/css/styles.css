@@ -1,0 +1,61 @@
+.table-view {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+    -fx-padding: 0px;
+    -fx-font-size: 16px;
+}
+
+/* Задний фон названий столбцов */
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: #df6a1b;
+    -fx-border-color: #04060a; /* Цвет границ между столбцами */
+    -fx-border-width: 0 2px 0 0; /* Толщина границ: верхняя, правая, нижняя, левая */
+}
+
+/* Названия столбцов */
+.table-view .column-header .label {
+    -fx-background-color: #df6a1b;
+    -fx-text-fill: #04060a;
+}
+
+/* Ячейки */
+.table-view .cell {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #df6a1b; /* Цвет границ между столбцами */
+    -fx-border-width: 0 2px 2px 0; /* Толщина границ: верхняя, правая, нижняя, левая */
+}
+
+/* Горизонтальная полоса прокрутки */
+.table-view .scroll-bar:horizontal {
+    -fx-background-color: #04060a; /* Цвет фона полосы прокрутки */
+}
+
+.table-view .scroll-bar .track {
+    -fx-background-color: #04060a; /* Цвет трека полосы прокрутки */
+}
+
+.table-view .scroll-bar .thumb {
+    -fx-background-color: #df6a1b; /* Цвет ползунка полосы прокрутки */
+}
+
+/*.table-view .scroll-bar .increment-button,*/
+/*.table-view .scroll-bar .decrement-button {*/
+/*    -fx-background-color: #df6a1b; !* Цвет кнопок увеличения/уменьшения *!*/
+/*    -fx-background-radius: 5px; !* Скругление углов кнопок *!*/
+/*}*/
+
+.table-view .scroll-bar .increment-arrow,
+.table-view .scroll-bar .decrement-arrow {
+    -fx-background-color: #ffffff; /* Цвет стрелок на кнопках */
+}
+
+/* Рамка вокруг таблицы */
+.table-view .edge-to-edge {
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+}
