@@ -116,7 +116,7 @@ public class StartWindow extends Application {
 
     private void showMainWindow() {
         MainWindow mainWindow = new MainWindow();
-        BorderPane mainPane = mainWindow.createMainPane();
+        BorderPane mainPane = mainWindow.createMainPane(this::showStartWindow);
         scene.setRoot(mainPane);
     }
 

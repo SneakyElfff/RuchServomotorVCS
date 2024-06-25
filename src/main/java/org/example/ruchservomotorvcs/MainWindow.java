@@ -1,23 +1,18 @@
 package org.example.ruchservomotorvcs;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
+import java.sql.*;
 import java.util.Objects;
 
 public class MainWindow {
 
-    public BorderPane createMainPane() {
+    private VBox menuPanel;
+
+    public BorderPane createMainPane(Runnable onLogout) {
         // Создание корневого контейнера
         BorderPane root = new BorderPane();
         root.setStyle(
@@ -30,9 +25,86 @@ public class MainWindow {
 
         // Создание контента для главного окна
         VBox mainBox = createMainBox();
-        root.setCenter(mainBox);
+
+        // Создание кнопки меню
+        Button menuButton = createMenuButton();
+        StackPane topRight = new StackPane(menuButton);
+        topRight.setAlignment(Pos.TOP_RIGHT);
+
+        // Создание панели меню (изначально скрытой)
+        menuPanel = createMenuPanel(onLogout);
+        menuPanel.setVisible(false);
+        menuPanel.setManaged(false);
+
+        // Создание StackPane для наложения меню поверх основного контента
+        StackPane contentStack = new StackPane(mainBox, menuPanel);
+        StackPane.setAlignment(menuPanel, Pos.TOP_RIGHT);
+
+        // Добавление всего в корневой контейнер
+        root.setTop(topRight);
+        root.setCenter(contentStack);
 
         return root;
+    }
+
+    private Button createMenuButton() {
+        Button menuButton = new Button("☰");
+        menuButton.setMinWidth(40);
+        menuButton.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #df6a1b; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-cursor: hand;"
+        );
+
+        menuButton.setOnAction(e -> toggleMenuPanel());
+
+        return menuButton;
+    }
+
+    private void toggleMenuPanel() {
+        menuPanel.setVisible(!menuPanel.isVisible());
+        menuPanel.setManaged(menuPanel.isVisible());
+    }
+
+    private VBox createMenuPanel(Runnable onLogout) {
+        VBox panel = new VBox(10);
+        panel.setStyle(
+                "-fx-background-color: #04060a;" +
+                        "-fx-border-color: #df6a1b;" +
+                        "-fx-border-width: 2px;" +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-padding: 10px;" +
+                        "-fx-min-width: 200px;" +
+                        "-fx-max-width: 200px;"
+        );
+        panel.setAlignment(Pos.TOP_CENTER);
+
+        Label titleLabel = new Label("Меню");
+        titleLabel.setStyle("-fx-text-fill: #df6a1b; -fx-font-size: 18px;");
+
+        Separator separator = new Separator();
+        separator.setStyle("-fx-background-color: #df6a1b;");
+
+        Button logoutButton = new Button("Выйти");
+        logoutButton.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-background-color: #df6a1b;" +
+                        "-fx-text-fill: #04060a;" +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-cursor: hand;"
+        );
+
+        logoutButton.setOnAction(e -> {
+            toggleMenuPanel(); // Скрыть меню перед выходом
+            onLogout.run();
+        });
+
+        panel.getChildren().addAll(titleLabel, separator, logoutButton);
+        return panel;
     }
 
     private VBox createMainBox() {
