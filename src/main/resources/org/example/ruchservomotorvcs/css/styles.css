@@ -1,61 +1,108 @@
 .table-view {
-    -fx-background-color: #04060a;
+    -fx-background-color: transparent;
     -fx-text-fill: #ffffff;
     -fx-border-color: #df6a1b;
     -fx-border-width: 2px;
     -fx-border-radius: 10px;
     -fx-padding: 0px;
     -fx-font-size: 16px;
+    -fx-background-insets: 0;
 }
 
-/* Задний фон названий столбцов */
+/* Фон "шапки" таблицы */
+.table-view .column-header-background {
+    -fx-background-color: #df6a1b;
+    -fx-background-radius: 8px 8px 0 0;
+    -fx-padding: 0 0 5px 0;
+}
+
+/* "Шапка" таблицы */
 .table-view .column-header, .table-view .filler {
-    -fx-background-color: #df6a1b;
-    -fx-border-color: #04060a; /* Цвет границ между столбцами */
-    -fx-border-width: 0 2px 0 0; /* Толщина границ: верхняя, правая, нижняя, левая */
+    -fx-background-color: transparent;
+    -fx-size: 45px;
+    -fx-border-width: 0 1px 0 0;
+    -fx-border-color: #04060a;
 }
 
-/* Названия столбцов */
-.table-view .column-header .label {
-    -fx-background-color: #df6a1b;
-    -fx-text-fill: #04060a;
-}
+/*.table-view .column-header .label {*/
+/*    -fx-background-color: transparent;*/
+/*    -fx-text-fill: #04060a;*/
+/*}*/
 
-/* Ячейки */
-.table-view .cell {
+.table-view .table-cell {
     -fx-background-color: #04060a;
     -fx-text-fill: #ffffff;
-    -fx-border-color: #df6a1b; /* Цвет границ между столбцами */
-    -fx-border-width: 0 2px 2px 0; /* Толщина границ: верхняя, правая, нижняя, левая */
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 0 1px 1px 0;
 }
 
-/* Горизонтальная полоса прокрутки */
-.table-view .scroll-bar:horizontal {
-    -fx-background-color: #04060a; /* Цвет фона полосы прокрутки */
+.table-view .column-header:last-visible {
+    -fx-border-width: 0;
 }
 
-.table-view .scroll-bar .track {
-    -fx-background-color: #04060a; /* Цвет трека полосы прокрутки */
+.table-view .table-row-cell:last-visible .table-cell {
+    -fx-border-width: 0 1px 0 0;
 }
 
-.table-view .scroll-bar .thumb {
-    -fx-background-color: #df6a1b; /* Цвет ползунка полосы прокрутки */
+.table-view .table-row-cell .table-cell:last-visible {
+    -fx-border-width: 0 0 1px 0;
 }
 
-/*.table-view .scroll-bar .increment-button,*/
-/*.table-view .scroll-bar .decrement-button {*/
-/*    -fx-background-color: #df6a1b; !* Цвет кнопок увеличения/уменьшения *!*/
-/*    -fx-background-radius: 5px; !* Скругление углов кнопок *!*/
+.table-view .table-row-cell:last-visible .table-cell:last-visible {
+    -fx-border-width: 0;
+}
+
+.table-row-cell:last-visible {
+    -fx-background-color: #04060a;
+    -fx-background-radius: 0 0 8px 8px;
+}
+
+/*.table-view .corner {*/
+/*    -fx-background-color: transparent;*/
 /*}*/
+
+/* Фон полосы прокрутки */
+.table-view .scroll-bar:horizontal {
+    -fx-background-color: #04060a;
+}
+
+/*.table-view .scroll-bar .track {*/
+/*    -fx-background-color: #04060a;*/
+/*}*/
+
+/* Цвет полосы прокрутки */
+.table-view .scroll-bar .thumb {
+    -fx-background-color: #df6a1b;
+}
 
 .table-view .scroll-bar .increment-arrow,
 .table-view .scroll-bar .decrement-arrow {
-    -fx-background-color: #ffffff; /* Цвет стрелок на кнопках */
+    -fx-background-color: #ffffff;
 }
 
-/* Рамка вокруг таблицы */
-.table-view .edge-to-edge {
-    -fx-border-color: #df6a1b;
-    -fx-border-width: 2px;
-    -fx-border-radius: 10px;
+.table-view .virtual-flow .scroll-bar:vertical,
+.table-view .virtual-flow .scroll-bar:vertical .track,
+.table-view .virtual-flow .scroll-bar:vertical .track-background,
+.table-view .virtual-flow .scroll-bar:horizontal,
+.table-view .virtual-flow .scroll-bar:horizontal .track,
+.table-view .virtual-flow .scroll-bar:horizontal .track-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .virtual-flow .scroll-bar .increment-button,
+.table-view .virtual-flow .scroll-bar .decrement-button {
+    -fx-opacity: 0;
+    -fx-padding: 2;
+}
+
+/* Цвет выделения строки */
+.table-row-cell:selected {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #04060a;
+}
+
+/* Цвет выделения ячейки */
+.table-row-cell:selected .table-cell {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #04060a;
 }
