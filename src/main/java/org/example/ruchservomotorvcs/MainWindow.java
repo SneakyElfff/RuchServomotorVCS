@@ -1,5 +1,6 @@
 package org.example.ruchservomotorvcs;
 
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -130,7 +131,7 @@ public class MainWindow {
 
         // Заполнение таблицы данными из базы данных
         try {
-            ObservableList<ObservableList<Object>> data = getTable();
+            ObservableList<ObservableList<Object>> data = getTable("items", "remarks");
             table.setItems(data);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -146,13 +147,27 @@ public class MainWindow {
         form.showForm();
     }
 
-    public ObservableList<ObservableList<Object>> getTable() throws SQLException {
+    public ObservableList<ObservableList<Object>> getTable(String... tableNames) throws SQLException {
         ObservableList<ObservableList<Object>> data = FXCollections.observableArrayList();
-        String query = "SELECT i.item_number, i.blueprint_number, i.project_number, " +
-                "r.review_number, r.revision, r.author, r.review_date, r.review_text, " +
-                "r.in_charge, r.fix_date, r.notes " +
-                "FROM items i " +
-                "JOIN remarks r ON i.item_number = r.item_number";
+
+        // Динамический SQL-запрос
+        StringBuilder queryBuilder = new StringBuilder("SELECT ");
+        for (int i = 0; i < tableNames.length; i++) {
+            queryBuilder.append(tableNames[i]).append(".*");
+            if (i < tableNames.length - 1) {
+                queryBuilder.append(", ");
+            }
+        }
+        queryBuilder.append(" FROM ").append(tableNames[0]);
+
+        // JOIN для остальных таблиц, если они есть
+        for (int i = 1; i < tableNames.length; i++) {
+            queryBuilder.append(" JOIN ").append(tableNames[i])
+                    .append(" ON ").append(tableNames[0]).append(".item_number = ")
+                    .append(tableNames[i]).append(".item_number");
+        }
+
+        String query = queryBuilder.toString();
 
         try (Connection conn = DatabaseUtil.getConnection();
              Statement stmt = conn.createStatement();
@@ -167,8 +182,11 @@ public class MainWindow {
             // Создание столбцов таблицы на основе метаданных
             for (int i = 1; i <= columnCount; i++) {
                 final int j = i;
-                TableColumn<ObservableList<Object>, Object> column = new TableColumn<>(metaData.getColumnName(i));
-                column.setCellValueFactory(param -> new javafx.beans.property.SimpleObjectProperty<>(param.getValue().get(j - 1)));
+                String columnName = metaData.getColumnName(i);
+                TableColumn<ObservableList<Object>, Object> column = new TableColumn<>(columnName);
+                column.setCellValueFactory(param ->
+                        new SimpleObjectProperty<>(param.getValue().get(j - 1))
+                );
                 table.getColumns().add(column);
             }
 

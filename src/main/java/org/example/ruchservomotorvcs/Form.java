@@ -74,7 +74,7 @@ public class Form {
                     try {
                         addRecord(inputFields);
                         formStage.close();
-                        table.setItems(mainWindow.getTable()); // Обновить данные в таблице, вызывая метод getTable из MainWindow
+                        table.setItems(mainWindow.getTable("items", "remarks")); // Обновить данные в таблице, вызывая метод getTable из MainWindow
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
