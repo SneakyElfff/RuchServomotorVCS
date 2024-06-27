@@ -2,12 +2,17 @@ package org.example.ruchservomotorvcs;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.control.DatePicker;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Form {
     private Stage formStage;
@@ -39,6 +44,8 @@ public class Form {
                         "-fx-padding: 10px;"
         );
 
+        List<InputField> inputFields = new ArrayList<>();
+
         try (Connection conn = DatabaseUtil.getConnection()) {
             String query = "SELECT i.item_number, i.blueprint_number, i.project_number, " +
                     "r.review_number, r.revision, r.author, r.review_date, r.review_text, " +
@@ -50,15 +57,22 @@ public class Form {
                 ResultSetMetaData metaData = rs.getMetaData();
                 int columnCount = metaData.getColumnCount();
 
-                TextField[] inputFields = new TextField[columnCount];
-
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnName(i);
-                    TextField textField = new TextField();
-                    textField.setPromptText(columnName);
-                    inputFields[i - 1] = textField;
-                    formBox.getChildren().add(new Label(columnName));
-                    formBox.getChildren().add(textField);
+                    Label label = new Label(columnName);
+                    formBox.getChildren().add(label);
+
+                    if (columnName.equals("review_date") || columnName.equals("fix_date")) {
+                        DatePicker datePicker = new DatePicker();
+                        datePicker.setPromptText(columnName);
+                        formBox.getChildren().add(datePicker);
+                        inputFields.add(new InputField(datePicker, columnName));
+                    } else {
+                        TextField textField = new TextField();
+                        textField.setPromptText(columnName);
+                        formBox.getChildren().add(textField);
+                        inputFields.add(new InputField(textField, columnName));
+                    }
                 }
 
                 Button addButton = new Button("Добавить");
@@ -74,7 +88,7 @@ public class Form {
                     try {
                         addRecord(inputFields);
                         formStage.close();
-                        table.setItems(mainWindow.getTable("items", "remarks")); // Обновить данные в таблице, вызывая метод getTable из MainWindow
+                        table.setItems(mainWindow.getTable("items", "remarks"));
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
@@ -89,16 +103,16 @@ public class Form {
         return formBox;
     }
 
-    private void addRecord(TextField[] inputFields) throws SQLException {
+    private void addRecord(List<InputField> inputFields) throws SQLException {
         StringBuilder itemsQueryBuilder = new StringBuilder("INSERT INTO items (");
         StringBuilder itemsValuesBuilder = new StringBuilder("VALUES (");
         StringBuilder remarksQueryBuilder = new StringBuilder("INSERT INTO remarks (");
         StringBuilder remarksValuesBuilder = new StringBuilder("VALUES (");
 
-        for (int i = 1; i <= 3; i++) {
-            itemsQueryBuilder.append(inputFields[i - 1].getPromptText());
+        for (int i = 0; i < 3; i++) {
+            itemsQueryBuilder.append(inputFields.get(i).columnName);
             itemsValuesBuilder.append("?");
-            if (i < 3) {
+            if (i < 2) {
                 itemsQueryBuilder.append(", ");
                 itemsValuesBuilder.append(", ");
             }
@@ -106,11 +120,11 @@ public class Form {
         itemsQueryBuilder.append(") ");
         itemsValuesBuilder.append(")");
 
-        remarksQueryBuilder.append(inputFields[0].getPromptText());
+        remarksQueryBuilder.append(inputFields.getFirst().columnName);
         remarksValuesBuilder.append("?");
 
-        for (int i = 4; i <= inputFields.length; i++) {
-            remarksQueryBuilder.append(", ").append(inputFields[i - 1].getPromptText());
+        for (int i = 3; i < inputFields.size(); i++) {
+            remarksQueryBuilder.append(", ").append(inputFields.get(i).columnName);
             remarksValuesBuilder.append(", ?");
         }
 
@@ -123,38 +137,50 @@ public class Form {
         try (Connection conn = DatabaseUtil.getConnection()) {
             try (PreparedStatement itemsStmt = conn.prepareStatement(itemsQuery)) {
                 for (int i = 0; i < 3; i++) {
-                    itemsStmt.setString(i + 1, inputFields[i].getText());
+                    itemsStmt.setString(i + 1, ((TextField) inputFields.get(i).node).getText());
                 }
                 itemsStmt.executeUpdate();
             }
 
             try (PreparedStatement remarksStmt = conn.prepareStatement(remarksQuery)) {
-                remarksStmt.setString(1, inputFields[0].getText());
+                remarksStmt.setString(1, ((TextField) inputFields.get(0).node).getText());
 
                 int paramIndex = 2;
-                for (int i = 3; i < inputFields.length; i++) {
-                    String columnName = inputFields[i].getPromptText();
-                    String value = inputFields[i].getText();
+                for (int i = 3; i < inputFields.size(); i++) {
+                    InputField field = inputFields.get(i);
+                    String columnName = field.columnName;
 
-                    switch (columnName) {
-                        case "review_number":
-                            remarksStmt.setInt(paramIndex++, Integer.parseInt(value));
-                            break;
-                        case "review_date":
-                        case "fix_date":
-                            if (value != null && !value.isEmpty()) {
-                                remarksStmt.setDate(paramIndex++, Date.valueOf(value));
-                            } else {
-                                remarksStmt.setNull(paramIndex++, Types.DATE);
-                            }
-                            break;
-                        default:
-                            remarksStmt.setString(paramIndex++, value);
-                            break;
+                    if (field.node instanceof DatePicker) {
+                        LocalDate date = ((DatePicker) field.node).getValue();
+                        if (date != null) {
+                            remarksStmt.setDate(paramIndex++, java.sql.Date.valueOf(date));
+                        } else {
+                            remarksStmt.setNull(paramIndex++, Types.DATE);
+                        }
+                    } else if (field.node instanceof TextField) {
+                        String value = ((TextField) field.node).getText();
+                        switch (columnName) {
+                            case "review_number":
+                                remarksStmt.setInt(paramIndex++, Integer.parseInt(value));
+                                break;
+                            default:
+                                remarksStmt.setString(paramIndex++, value);
+                                break;
+                        }
                     }
                 }
                 remarksStmt.executeUpdate();
             }
+        }
+    }
+
+    private class InputField {
+        Node node;
+        String columnName;
+
+        InputField(Node node, String columnName) {
+            this.node = node;
+            this.columnName = columnName;
         }
     }
 }
