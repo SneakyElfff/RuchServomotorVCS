@@ -142,6 +142,7 @@
 .date-picker-popup .spinner .button {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
+    -fx-cursor: hand;
 }
 
 .date-picker-popup .spinner .button:hover {
@@ -196,4 +197,22 @@
 .date-picker-popup .calendar-grid .day-cell.selected {
     -fx-background-color: #df6a1b;
     -fx-text-fill: #04060a;
+}
+
+/* Стиль для дней предыдущего месяца */
+.date-picker-popup .calendar-grid .day-cell.previous-month {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #808d93;
+}
+
+/* Стиль для дней следующего месяца */
+.date-picker-popup .calendar-grid .day-cell.next-month {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #808d93;
+}
+
+/* Стиль для наведения на дни предыдущего и следующего месяцев */
+.date-picker-popup .calendar-grid .day-cell.previous-month:hover,
+.date-picker-popup .calendar-grid .day-cell.next-month:hover {
+    -fx-background-color: transparent;
 }
