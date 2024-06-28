@@ -114,7 +114,7 @@ public class MainWindow {
                 "-fx-font-size: 18px; " +
                         "-fx-background-color: #df6a1b; " +
                         "-fx-text-fill: #04060a; " +
-                        "-fx-border-radius: 10px;" +
+                        "-fx-background-radius: 10px;" +
                         "-fx-cursor: hand;"
         );
 

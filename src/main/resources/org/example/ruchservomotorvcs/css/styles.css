@@ -103,6 +103,97 @@
 
 /* Цвет выделения ячейки */
 .table-row-cell:selected .table-cell {
-    -fx-background-color: #ffffff;
+    -fx-background-color: #df6a1b;
+    -fx-text-fill: #04060a;
+}
+
+
+/* Кнопка календаря */
+.date-picker .arrow-button {
+    -fx-background-color: #df6a1b;
+    -fx-background-radius: 0 10px 10px 0;
+    -fx-border-color: #04060a;
+    -fx-border-width: 2px;
+    -fx-border-radius: 0 10px 10px 0;
+}
+
+/* Цвет иконки календаря */
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #04060a;
+}
+
+.date-picker-popup {
+    -fx-background-color: #04060a;
+    -fx-background-radius: 0 0 10px 10px;
+}
+
+/* Шапка календаря */
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #df6a1b;
+    -fx-background-radius: 10px 10px 0 0;
+}
+
+/* Цвет стрелок */
+.date-picker-popup .spinner .left-arrow,
+.date-picker-popup .spinner .right-arrow {
+    -fx-background-color: #04060a;
+}
+
+.date-picker-popup .spinner .button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.date-picker-popup .spinner .button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Панель дней недели */
+.date-picker-popup .calendar-grid {
+    -fx-background-color: #04060a;
+    -fx-border-color: #df6a1b;
+    -fx-border-radius: 0 0 10px 10px;
+    -fx-background-radius: 0 0 10px 10px;
+}
+
+/* Текст панели дней недели */
+.date-picker-popup .day-name-cell {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #df6a1b;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 0 1px 0 1px; /* верхняя правая нижняя левая */
+}
+
+/* Панель номеров недель */
+.date-picker-popup .week-number-cell {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #df6a1b;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0 0 0 10px;
+}
+
+/* Фон ячеек календаря */
+.date-picker-popup .calendar-grid .day-cell {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 1px;
+    -fx-border-radius: 0 0 10px 0;
+    -fx-background-radius: 0 0 10px 0;
+}
+
+/* Стиль для текущей даты */
+.date-picker-popup .day-cell.today {
+    -fx-background-color: #df6a1b;
+    -fx-text-fill: #04060a;
+}
+
+/* Цвет курсора */
+.date-picker-popup .calendar-grid .day-cell:hover {
+    -fx-background-color: #df6a1b;
+}
+
+.date-picker-popup .calendar-grid .day-cell.selected {
+    -fx-background-color: #df6a1b;
     -fx-text-fill: #04060a;
 }

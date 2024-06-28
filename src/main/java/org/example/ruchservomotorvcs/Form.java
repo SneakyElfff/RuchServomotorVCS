@@ -28,7 +28,8 @@ public class Form {
 
     public void showForm() {
         VBox formBox = createFormBox();
-        Scene formScene = new Scene(formBox, 400, 500);
+        Scene formScene = new Scene(formBox, 600, 700);
+        formScene.getStylesheets().add(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
         formStage.setScene(formScene);
         formStage.show();
     }
@@ -64,23 +65,56 @@ public class Form {
 
                     if (columnName.equals("review_date") || columnName.equals("fix_date")) {
                         DatePicker datePicker = new DatePicker();
+                        datePicker.setEditable(false);
                         datePicker.setPromptText(columnName);
+                        datePicker.setMaxWidth(200);
+
+                        // Применяем стили к DatePicker
+                        datePicker.setStyle(
+                                "-fx-font-size: 18px; " +
+                                        "-fx-background-color: #04060a; " +
+                                        "-fx-text-fill: #ffffff; " +
+                                        "-fx-border-color: #df6a1b; " +
+                                        "-fx-border-width: 2px; " +
+                                        "-fx-border-radius: 10px;" +
+                                        "-fx-cursor: hand;"
+                        );
+
+                        datePicker.getEditor().setStyle(
+                                "-fx-background-color: #04060a; " +
+                                        "-fx-text-fill: #ffffff; " +
+                                        "-fx-font-size: 18px;" +
+                                        "-fx-background-radius: 10px;" +
+                                        "-fx-cursor: pointer;"
+                        );
+
                         formBox.getChildren().add(datePicker);
                         inputFields.add(new InputField(datePicker, columnName));
                     } else {
                         TextField textField = new TextField();
+                        textField.setMaxWidth(200);
                         textField.setPromptText(columnName);
+                        textField.setStyle(
+                                "-fx-font-size: 18px; " +
+                                        "-fx-background-color: #04060a; " +
+                                        "-fx-text-fill: #ffffff; " +
+                                        "-fx-border-color: #df6a1b; " +
+                                        "-fx-border-width: 2px; " +
+                                        "-fx-border-radius: 10px;"
+                        );
+
                         formBox.getChildren().add(textField);
                         inputFields.add(new InputField(textField, columnName));
                     }
                 }
 
                 Button addButton = new Button("Добавить");
+                addButton.setMinWidth(200);
                 addButton.setStyle(
                         "-fx-font-size: 18px; " +
                                 "-fx-background-color: #df6a1b; " +
                                 "-fx-text-fill: #04060a; " +
-                                "-fx-border-radius: 10px;" +
+                                "-fx-background-radius: 10px;" +
                                 "-fx-cursor: hand;"
                 );
 
