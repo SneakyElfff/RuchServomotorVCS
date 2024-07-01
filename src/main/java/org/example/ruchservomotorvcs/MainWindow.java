@@ -179,17 +179,18 @@ public class MainWindow {
             // Очистка текущих столбцов
             table.getColumns().clear();
 
+            int counter = 0;
             // Создание столбцов таблицы на основе метаданных
             for (int i = 1; i <= columnCount; i++) {
                 final int j = i;
-                int counter = 0;
 
                 String columnName = metaData.getColumnName(i);
                 // Избежание дублирования столбца
                 if (Objects.equals(columnName, "item_number")) {
                     counter++;
                 }
-                if (counter == 1) {
+                if (counter == 2) {
+                    counter = 0;
                     continue;
                 }
                 TableColumn<ObservableList<Object>, Object> column = new TableColumn<>(columnName);

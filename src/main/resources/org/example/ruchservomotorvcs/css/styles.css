@@ -24,11 +24,6 @@
     -fx-border-color: #04060a;
 }
 
-/*.table-view .column-header .label {*/
-/*    -fx-background-color: transparent;*/
-/*    -fx-text-fill: #04060a;*/
-/*}*/
-
 .table-view .table-cell {
     -fx-background-color: #04060a;
     -fx-text-fill: #ffffff;
@@ -57,18 +52,10 @@
     -fx-background-radius: 0 0 8px 8px;
 }
 
-/*.table-view .corner {*/
-/*    -fx-background-color: transparent;*/
-/*}*/
-
 /* Фон полосы прокрутки */
 .table-view .scroll-bar:horizontal {
     -fx-background-color: #04060a;
 }
-
-/*.table-view .scroll-bar .track {*/
-/*    -fx-background-color: #04060a;*/
-/*}*/
 
 /* Цвет полосы прокрутки */
 .table-view .scroll-bar .thumb {

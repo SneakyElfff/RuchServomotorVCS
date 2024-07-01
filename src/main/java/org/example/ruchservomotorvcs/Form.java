@@ -108,8 +108,12 @@ public class Form {
                 }
 
                 headline.getChildren().addAll(logo, numbersRow);
-                formBox.getChildren().addAll(headline, authorsAndDates, textFields, createAddButton(inputFields));
 
+                HBox buttonBox = new HBox(10);
+                buttonBox.setAlignment(Pos.CENTER);
+                buttonBox.getChildren().addAll(createAddButton(inputFields), createCloseButton());
+
+                formBox.getChildren().addAll(headline, authorsAndDates, textFields, buttonBox);
                 return formBox;
             }
         } catch (SQLException e) {
@@ -141,6 +145,12 @@ public class Form {
             }
         });
         return addButton;
+    }
+
+    private Button createCloseButton() {
+        Button closeButton = createStyledButton("Закрыть");
+        closeButton.setOnAction(event -> formStage.close());
+        return closeButton;
     }
 
     private TextField createStyledTextField(String promptText) {
