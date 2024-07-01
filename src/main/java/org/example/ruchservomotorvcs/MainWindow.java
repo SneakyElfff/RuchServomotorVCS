@@ -182,7 +182,16 @@ public class MainWindow {
             // Создание столбцов таблицы на основе метаданных
             for (int i = 1; i <= columnCount; i++) {
                 final int j = i;
+                int counter = 0;
+
                 String columnName = metaData.getColumnName(i);
+                // Избежание дублирования столбца
+                if (Objects.equals(columnName, "item_number")) {
+                    counter++;
+                }
+                if (counter == 1) {
+                    continue;
+                }
                 TableColumn<ObservableList<Object>, Object> column = new TableColumn<>(columnName);
                 column.setCellValueFactory(param ->
                         new SimpleObjectProperty<>(param.getValue().get(j - 1))

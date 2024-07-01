@@ -124,7 +124,7 @@
 
 .date-picker-popup {
     -fx-background-color: #04060a;
-    -fx-background-radius: 0 0 10px 10px;
+    -fx-background-radius: 10px;
 }
 
 /* Шапка календаря */
