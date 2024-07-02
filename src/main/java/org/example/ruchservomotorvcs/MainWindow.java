@@ -213,6 +213,11 @@ public class MainWindow {
                 column.setCellValueFactory(param ->
                         new SimpleObjectProperty<>(param.getValue().get(j - 1))
                 );
+
+                // Устанавливаем ширину столбца по длине названия столбца
+                double charWidth = 10; // Примерная ширина одного символа в пикселях
+                column.setPrefWidth(charWidth * columnName.length());
+
                 table.getColumns().add(column);
             }
 

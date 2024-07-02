@@ -78,8 +78,14 @@
 
 .table-view .virtual-flow .scroll-bar .increment-button,
 .table-view .virtual-flow .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
     -fx-opacity: 0;
     -fx-padding: 2;
+}
+
+/* Corner area between scroll bars */
+.table-view .corner {
+    -fx-background-color: transparent;
 }
 
 /* Цвет выделения строки */
@@ -224,15 +230,15 @@
 }
 
 .dialog-pane .header-panel .label {
-    -fx-text-fill: red;
+    -fx-text-fill: white;
 }
 
 /* Цвет предупреждения */
 .dialog-pane .content {
     -fx-background-color: #04060a;
-    -fx-text-fill: red;
+    -fx-text-fill: white;
 
-    -fx-padding: 0 0 -10 0;
+    /*-fx-padding: 0 0 -10 0;*/
 }
 
 /* Зона кнопок */

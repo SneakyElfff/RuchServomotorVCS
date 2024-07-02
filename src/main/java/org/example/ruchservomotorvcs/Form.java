@@ -22,7 +22,17 @@ import java.util.List;
 public class Form {
     private Stage formStage;
     private TableView<ObservableList<Object>> table;
-    private MainWindow mainWindow; // Добавляем ссылку на MainWindow
+    private MainWindow mainWindow; // ссылка на MainWindow
+
+    private class InputField {
+        Node node;
+        String columnName;
+
+        InputField(Node node, String columnName) {
+            this.node = node;
+            this.columnName = columnName;
+        }
+    }
 
     public Form(TableView<ObservableList<Object>> table, MainWindow mainWindow) {
         this.table = table;
@@ -118,7 +128,7 @@ public class Form {
                 return formBox;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
         }
 
         return formBox;
@@ -142,7 +152,7 @@ public class Form {
                 formStage.close();
                 table.setItems(mainWindow.getTable("items", "remarks"));
             } catch (SQLException e) {
-                e.printStackTrace();
+                showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось внести данные в базу.", e.getMessage());
             }
         });
         return addButton;
@@ -313,13 +323,17 @@ public class Form {
         }
     }
 
-    private class InputField {
-        Node node;
-        String columnName;
+    private void showErrorAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
 
-        InputField(Node node, String columnName) {
-            this.node = node;
-            this.columnName = columnName;
-        }
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(
+                getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+        alert.showAndWait();
     }
 }
