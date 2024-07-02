@@ -203,3 +203,57 @@
 .date-picker-popup .calendar-grid .day-cell.next-month:hover {
     -fx-background-color: transparent;
 }
+
+
+/* Фон окна */
+.root {
+    -fx-background-color: #04060a;
+}
+
+/* Фон диалогового окна */
+.dialog-pane {
+    -fx-background-color: #04060a;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 0 0 10px 10px;
+}
+
+/* Фон заголовка */
+.dialog-pane .header-panel {
+    -fx-background-color: #04060a;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: red;
+}
+
+/* Цвет предупреждения */
+.dialog-pane .content {
+    -fx-background-color: #04060a;
+    -fx-text-fill: red;
+
+    -fx-padding: 0 0 -10 0;
+}
+
+/* Зона кнопок */
+.dialog-pane .button-bar {
+    -fx-background-color: #04060a;
+    -fx-background-radius: 10px;
+}
+
+.dialog-pane .button {
+    -fx-background-color: #df6a1b;
+    -fx-text-fill: #04060a;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+}
+
+/* Кнопка "Нет" */
+.dialog-pane .button.no-button {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #df6a1b;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+    -fx-cursor: hand;
+}

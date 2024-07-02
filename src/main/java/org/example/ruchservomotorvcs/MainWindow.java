@@ -109,6 +109,9 @@ public class MainWindow {
         VBox mainBox = new VBox(10);
         mainBox.setAlignment(Pos.CENTER);
 
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+
         Button addButton = new Button("Добавить запись");
         addButton.setStyle(
                 "-fx-font-size: 18px; " +
@@ -119,6 +122,19 @@ public class MainWindow {
         );
 
         addButton.setOnAction(event -> showAddRecordForm());
+
+        Button deleteButton = new Button("Удалить запись");
+        deleteButton.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-background-color: #df6a1b; " +
+                        "-fx-text-fill: #04060a; " +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-cursor: hand;"
+        );
+
+        deleteButton.setOnAction(event -> showDeleteConfirmationDialog());
+
+        buttonBox.getChildren().addAll(addButton, deleteButton);
 
         table = new TableView<>();
         table.getStyleClass().add("edge-to-edge"); // Применяем класс стилей для рамки
@@ -137,7 +153,7 @@ public class MainWindow {
             e.printStackTrace();
         }
 
-        mainBox.getChildren().addAll(addButton, table);
+        mainBox.getChildren().addAll(buttonBox, table);
 
         return mainBox;
     }
@@ -214,5 +230,72 @@ public class MainWindow {
         }
 
         return data;
+    }
+
+    private void showDeleteConfirmationDialog() {
+        ObservableList<Object> selectedRow = table.getSelectionModel().getSelectedItem();
+
+        if (selectedRow != null) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Подтверждение удаления");
+            alert.setHeaderText("Вы уверены, что хотите удалить эту запись?");
+
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.getStylesheets().add(
+                    getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+            dialogPane.getStyleClass().add("root");
+
+            ButtonType buttonTypeYes = new ButtonType("Да", ButtonBar.ButtonData.YES);
+            ButtonType buttonTypeNo = new ButtonType("Нет", ButtonBar.ButtonData.NO);
+
+            alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+            Button noButtonNode = (Button) alert.getDialogPane().lookupButton(buttonTypeNo);
+            noButtonNode.getStyleClass().add("no-button");
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == buttonTypeYes) {
+                    deleteSelectedRecord();
+                }
+            });
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Предупреждение");
+            alert.setHeaderText("Пожалуйста, выберите запись для удаления.");
+
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.getStylesheets().add(
+                    getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+            dialogPane.getStyleClass().add("root");
+
+            alert.showAndWait();
+        }
+    }
+
+    private void deleteSelectedRecord() {
+        ObservableList<Object> selectedRow = table.getSelectionModel().getSelectedItem();
+
+        if (selectedRow != null) {
+            // четвертый столбец - primary key таблицы remarks (например, review_number)
+            Object primaryKey = selectedRow.get(3);
+
+            try (Connection conn = DatabaseUtil.getConnection()) {
+//                String query = "DELETE FROM items WHERE item_number = ?";
+//                try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+//                    pstmt.setObject(1, primaryKey);
+//                    pstmt.executeUpdate();
+//                }
+
+                String query = "DELETE FROM remarks WHERE item_number = ?";
+                try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                    pstmt.setObject(1, primaryKey);
+                    pstmt.executeUpdate();
+                }
+
+                table.getItems().remove(selectedRow);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

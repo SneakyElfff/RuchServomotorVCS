@@ -84,6 +84,7 @@ public class Form {
                     String columnName = metaData.getColumnName(i);
                     Label label = new Label(columnName);
                     label.setAlignment(Pos.CENTER);
+                    label.setStyle("-fx-text-fill: #ffffff;");
 
                     Node field;
                     if (columnName.endsWith("date")) {
@@ -302,6 +303,9 @@ public class Form {
                                 remarksStmt.setString(paramIndex++, value);
                                 break;
                         }
+                    } else if (field.node instanceof TextArea) {
+                        String value = ((TextArea) field.node).getText();
+                        remarksStmt.setString(paramIndex++, value);
                     }
                 }
                 remarksStmt.executeUpdate();
