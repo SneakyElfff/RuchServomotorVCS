@@ -113,28 +113,26 @@ public class MainWindow {
         buttonBox.setAlignment(Pos.CENTER);
 
         Button addButton = new Button("Добавить запись");
-        addButton.setStyle(
+        Button editButton = new Button("Редактировать запись");
+        Button deleteButton = new Button("Удалить запись");
+
+        // Стили для кнопок
+        String buttonStyle =
                 "-fx-font-size: 18px; " +
                         "-fx-background-color: #df6a1b; " +
                         "-fx-text-fill: #04060a; " +
                         "-fx-background-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;";
+
+        addButton.setStyle(buttonStyle);
+        editButton.setStyle(buttonStyle);
+        deleteButton.setStyle(buttonStyle);
 
         addButton.setOnAction(event -> showAddRecordForm());
-
-        Button deleteButton = new Button("Удалить запись");
-        deleteButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #df6a1b; " +
-                        "-fx-text-fill: #04060a; " +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
-
+        editButton.setOnAction(event -> showEditRecordForm());
         deleteButton.setOnAction(event -> showDeleteConfirmationDialog());
 
-        buttonBox.getChildren().addAll(addButton, deleteButton);
+        buttonBox.getChildren().addAll(addButton, editButton, deleteButton);
 
         table = new TableView<>();
         table.getStyleClass().add("edge-to-edge"); // Применяем класс стилей для рамки
@@ -161,6 +159,22 @@ public class MainWindow {
     private void showAddRecordForm() {
         Form form = new Form(table, this);
         form.showForm();
+    }
+
+    private void showEditRecordForm() {
+        ObservableList<Object> selectedRow = table.getSelectionModel().getSelectedItem();
+        if (selectedRow != null) {
+            ObservableList<Object> selectedRowCopy = FXCollections.observableArrayList(selectedRow);
+
+            // Индекс столбца, который нужно исключить (например, 3)
+            int excludeIndex = 3;
+            selectedRowCopy.remove(excludeIndex);
+
+            Form form = new Form(table, this);
+            form.showEditForm(selectedRowCopy);
+        } else {
+            showWarningAlert("Пожалуйста, выберите запись для редактирования.");
+        }
     }
 
     public ObservableList<ObservableList<Object>> getTable(String... tableNames) throws SQLException {
@@ -264,16 +278,7 @@ public class MainWindow {
                 }
             });
         } else {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Предупреждение");
-            alert.setHeaderText("Пожалуйста, выберите запись для удаления.");
-
-            DialogPane dialogPane = alert.getDialogPane();
-            dialogPane.getStylesheets().add(
-                    getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
-            dialogPane.getStyleClass().add("root");
-
-            alert.showAndWait();
+            showWarningAlert("Пожалуйста, выберите запись для удаления.");
         }
     }
 
@@ -302,5 +307,18 @@ public class MainWindow {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void showWarningAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Предупреждение");
+        alert.setHeaderText(message);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(
+                getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+        alert.showAndWait();
     }
 }

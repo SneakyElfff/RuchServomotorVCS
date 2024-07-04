@@ -23,6 +23,7 @@ public class Form {
     private Stage formStage;
     private TableView<ObservableList<Object>> table;
     private MainWindow mainWindow; // ссылка на MainWindow
+    private ObservableList<Object> editingRowData;
 
     private class InputField {
         Node node;
@@ -42,6 +43,13 @@ public class Form {
     }
 
     public void showForm() {
+        showForm(null);
+    }
+
+    public void showForm(ObservableList<Object> rowData) {
+        this.editingRowData = rowData;
+        formStage.setTitle(rowData == null ? "Добавить запись" : "Редактировать запись");
+
         VBox formBox = createFormBox();
         Scene formScene = new Scene(formBox, 800, 600);
         formScene.getStylesheets().add(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
@@ -80,7 +88,7 @@ public class Form {
         VBox textFields = new VBox(10);
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String query = "SELECT i.item_number, i.project_number, i.blueprint_number, " +
+            String query = "SELECT i.item_number, i.blueprint_number, i.project_number, " +
                     "r.revision, r.review_number, r.author, r.review_date, r.in_charge, " +
                     "r.fix_date, r.review_text, r.notes " +
                     "FROM items i " +
@@ -107,6 +115,19 @@ public class Form {
                         field = createStyledTextArea(columnName);
                     }
 
+                    // Заполнение полей данными, если это редактирование
+                    if (editingRowData != null && i - 1 < editingRowData.size()) {
+                        Object value = editingRowData.get(i - 1);
+                        if (field instanceof TextField) {
+                            ((TextField) field).setText(value != null ? value.toString() : "");
+                        } else if (field instanceof TextArea) {
+                            ((TextArea) field).setText(value != null ? value.toString() : "");
+                        } else if (field instanceof DatePicker && value instanceof Date) {
+                            ((DatePicker) field).setValue(((Date) value).toLocalDate());
+                        }
+                    }
+
+                    // Добавление полей в форму
                     if (i <= 5) {
                         addFieldToGridPane(numbersRow, label, field, i - 1);
                     } else if (i <= 9) {
@@ -122,7 +143,7 @@ public class Form {
 
                 HBox buttonBox = new HBox(10);
                 buttonBox.setAlignment(Pos.CENTER);
-                buttonBox.getChildren().addAll(createAddButton(inputFields), createCloseButton());
+                buttonBox.getChildren().addAll(createActionButton(inputFields), createCloseButton());
 
                 formBox.getChildren().addAll(headline, authorsAndDates, textFields, buttonBox);
                 return formBox;
@@ -134,6 +155,24 @@ public class Form {
         return formBox;
     }
 
+    private Button createActionButton(List<InputField> inputFields) {
+        Button actionButton = createStyledButton(editingRowData == null ? "Добавить" : "Сохранить");
+        actionButton.setOnAction(event -> {
+            try {
+                if (editingRowData == null) {
+                    addRecord(inputFields);
+                } else {
+                    updateRecord(inputFields);
+                }
+                formStage.close();
+                table.setItems(mainWindow.getTable("items", "remarks"));
+            } catch (SQLException e) {
+                showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось выполнить операцию.", e.getMessage());
+            }
+        });
+        return actionButton;
+    }
+
     private void addFieldToGridPane(GridPane gridPane, Label label, Node field, int columnIndex) {
         gridPane.add(label, columnIndex, 0);
         gridPane.add(field, columnIndex, 1);
@@ -142,20 +181,6 @@ public class Form {
 
     private void addFieldToVBox(VBox vBox, Label label, Node field) {
         vBox.getChildren().addAll(label, field);
-    }
-
-    private Button createAddButton(List<InputField> inputFields) {
-        Button addButton = createStyledButton("Добавить");
-        addButton.setOnAction(event -> {
-            try {
-                addRecord(inputFields);
-                formStage.close();
-                table.setItems(mainWindow.getTable("items", "remarks"));
-            } catch (SQLException e) {
-                showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось внести данные в базу.", e.getMessage());
-            }
-        });
-        return addButton;
     }
 
     private Button createCloseButton() {
@@ -328,6 +353,74 @@ public class Form {
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(
+                getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+        alert.showAndWait();
+    }
+
+    public void showEditForm(ObservableList<Object> rowData) {
+        showForm(rowData);
+    }
+
+    private void updateRecord(List<InputField> inputFields) throws SQLException {
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            // Обновление таблицы items
+            String updateItemsQuery = "UPDATE items SET blueprint_number = ?, project_number = ? WHERE item_number = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(updateItemsQuery)) {
+                pstmt.setString(1, ((TextField) inputFields.get(2).node).getText());
+                pstmt.setString(2, ((TextField) inputFields.get(1).node).getText());
+                pstmt.setString(3, ((TextField) inputFields.get(0).node).getText());
+                pstmt.executeUpdate();
+            }
+
+            // Обновление таблицы remarks
+            String updateRemarksQuery = "UPDATE remarks SET revision = ?, author = ?, review_date = ?, review_text = ?, in_charge = ?, fix_date = ?, notes = ? WHERE item_number = ? AND review_number = ?";
+            try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
+                pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
+                pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author
+
+                LocalDate reviewDate = ((DatePicker) inputFields.get(6).node).getValue();
+                if (reviewDate != null) {
+                    pstmt.setDate(3, java.sql.Date.valueOf(reviewDate)); // review_date
+                } else {
+                    pstmt.setNull(3, Types.DATE);
+                }
+
+                pstmt.setString(4, ((TextArea) inputFields.get(9).node).getText()); // review_text
+                pstmt.setString(5, ((TextField) inputFields.get(7).node).getText()); // in_charge
+
+                LocalDate fixDate = ((DatePicker) inputFields.get(8).node).getValue();
+                if (fixDate != null) {
+                    pstmt.setDate(6, java.sql.Date.valueOf(fixDate)); // fix_date
+                } else {
+                    pstmt.setNull(6, Types.DATE);
+                }
+
+                pstmt.setString(7, ((TextArea) inputFields.get(10).node).getText()); // notes
+                pstmt.setString(8, ((TextField) inputFields.get(0).node).getText()); // item_number
+                pstmt.setInt(9, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+                pstmt.executeUpdate();
+            }
+
+            // Обновление данных в таблице JavaFX
+            formStage.close();
+            table.setItems(mainWindow.getTable("items", "remarks"));
+
+        } catch (SQLException | IllegalArgumentException e) {
+            e.printStackTrace();
+            // Показать сообщение об ошибке пользователю
+            showErrorAlert("Ошибка при обновлении данных: " + e.getMessage());
+        }
+    }
+
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Ошибка");
+        alert.setHeaderText(message);
 
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.getStylesheets().add(
