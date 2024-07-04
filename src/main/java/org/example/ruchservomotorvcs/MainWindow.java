@@ -58,7 +58,7 @@ public class MainWindow {
                         "-fx-cursor: hand;"
         );
 
-        menuButton.setOnAction(e -> toggleMenuPanel());
+        menuButton.setOnAction(_ -> toggleMenuPanel());
 
         return menuButton;
     }
@@ -96,7 +96,7 @@ public class MainWindow {
                         "-fx-cursor: hand;"
         );
 
-        logoutButton.setOnAction(e -> {
+        logoutButton.setOnAction(_ -> {
             toggleMenuPanel(); // Скрыть меню перед выходом
             onLogout.run();
         });
@@ -128,9 +128,9 @@ public class MainWindow {
         editButton.setStyle(buttonStyle);
         deleteButton.setStyle(buttonStyle);
 
-        addButton.setOnAction(event -> showAddRecordForm());
-        editButton.setOnAction(event -> showEditRecordForm());
-        deleteButton.setOnAction(event -> showDeleteConfirmationDialog());
+        addButton.setOnAction(_ -> showAddRecordForm());
+        editButton.setOnAction(_ -> showEditRecordForm());
+        deleteButton.setOnAction(_ -> showDeleteConfirmationDialog());
 
         buttonBox.getChildren().addAll(addButton, editButton, deleteButton);
 
@@ -148,7 +148,7 @@ public class MainWindow {
             ObservableList<ObservableList<Object>> data = getTable("items", "remarks");
             table.setItems(data);
         } catch (SQLException e) {
-            e.printStackTrace();
+            showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
         }
 
         mainBox.getChildren().addAll(buttonBox, table);
@@ -261,7 +261,7 @@ public class MainWindow {
 
             DialogPane dialogPane = alert.getDialogPane();
             dialogPane.getStylesheets().add(
-                    getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+                    Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
             dialogPane.getStyleClass().add("root");
 
             ButtonType buttonTypeYes = new ButtonType("Да", ButtonBar.ButtonData.YES);
@@ -304,7 +304,7 @@ public class MainWindow {
 
                 table.getItems().remove(selectedRow);
             } catch (SQLException e) {
-                e.printStackTrace();
+                showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось удалить данные из базы.", e.getMessage());
             }
         }
     }
@@ -316,7 +316,21 @@ public class MainWindow {
 
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.getStylesheets().add(
-                getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+                Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+        alert.showAndWait();
+    }
+
+    static void showErrorAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(
+                Objects.requireNonNull(MainWindow.class.getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
         dialogPane.getStyleClass().add("root");
 
         alert.showAndWait();

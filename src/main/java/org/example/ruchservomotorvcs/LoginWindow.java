@@ -74,7 +74,7 @@ public class LoginWindow {
                         "-fx-cursor: hand;"
         );
 
-        submitButton.setOnAction(event -> {
+        submitButton.setOnAction(_ -> {
             if (usernameField.getText().isEmpty() || passwordField.getText().isEmpty()) {
                 errorLabel.setText("Пожалуйста, заполните все поля.");
             } else {
@@ -103,7 +103,7 @@ public class LoginWindow {
                         "-fx-cursor: hand;"
         );
 
-        backButton.setOnAction(event -> onBack.run());
+        backButton.setOnAction(_ -> onBack.run());
 
         HBox topBox = new HBox(backButton);
         topBox.setAlignment(Pos.TOP_LEFT);

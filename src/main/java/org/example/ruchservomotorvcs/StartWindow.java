@@ -88,7 +88,7 @@ public class StartWindow extends Application {
                         "-fx-cursor: hand;"
         );
 
-        loginButton.setOnAction(event -> showLoginFields());
+        loginButton.setOnAction(_ -> showLoginFields());
 
         return loginButton;
     }

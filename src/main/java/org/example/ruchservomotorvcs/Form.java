@@ -18,6 +18,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Form {
     private Stage formStage;
@@ -52,7 +53,7 @@ public class Form {
 
         VBox formBox = createFormBox();
         Scene formScene = new Scene(formBox, 800, 600);
-        formScene.getStylesheets().add(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
+        formScene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
         formStage.setScene(formScene);
         formStage.show();
     }
@@ -118,12 +119,13 @@ public class Form {
                     // Заполнение полей данными, если это редактирование
                     if (editingRowData != null && i - 1 < editingRowData.size()) {
                         Object value = editingRowData.get(i - 1);
-                        if (field instanceof TextField) {
-                            ((TextField) field).setText(value != null ? value.toString() : "");
-                        } else if (field instanceof TextArea) {
-                            ((TextArea) field).setText(value != null ? value.toString() : "");
-                        } else if (field instanceof DatePicker && value instanceof Date) {
-                            ((DatePicker) field).setValue(((Date) value).toLocalDate());
+                        switch (field) {
+                            case TextField textField -> textField.setText(value != null ? value.toString() : "");
+                            case TextArea textArea -> textArea.setText(value != null ? value.toString() : "");
+                            case DatePicker datePicker when value instanceof Date ->
+                                    datePicker.setValue(((Date) value).toLocalDate());
+                            default -> {
+                            }
                         }
                     }
 
@@ -149,7 +151,7 @@ public class Form {
                 return formBox;
             }
         } catch (SQLException e) {
-            showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
+            MainWindow.showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
         }
 
         return formBox;
@@ -157,7 +159,7 @@ public class Form {
 
     private Button createActionButton(List<InputField> inputFields) {
         Button actionButton = createStyledButton(editingRowData == null ? "Добавить" : "Сохранить");
-        actionButton.setOnAction(event -> {
+        actionButton.setOnAction(_ -> {
             try {
                 if (editingRowData == null) {
                     addRecord(inputFields);
@@ -167,7 +169,7 @@ public class Form {
                 formStage.close();
                 table.setItems(mainWindow.getTable("items", "remarks"));
             } catch (SQLException e) {
-                showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось выполнить операцию.", e.getMessage());
+                MainWindow.showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось выполнить операцию.", e.getMessage());
             }
         });
         return actionButton;
@@ -185,7 +187,7 @@ public class Form {
 
     private Button createCloseButton() {
         Button closeButton = createStyledButton("Закрыть");
-        closeButton.setOnAction(event -> formStage.close());
+        closeButton.setOnAction(_ -> formStage.close());
         return closeButton;
     }
 
@@ -302,8 +304,8 @@ public class Form {
         remarksQueryBuilder.append(") ");
         remarksValuesBuilder.append(")");
 
-        String itemsQuery = itemsQueryBuilder.toString() + itemsValuesBuilder.toString();
-        String remarksQuery = remarksQueryBuilder.toString() + remarksValuesBuilder.toString();
+        String itemsQuery = itemsQueryBuilder + itemsValuesBuilder.toString();
+        String remarksQuery = remarksQueryBuilder + remarksValuesBuilder.toString();
 
         try (Connection conn = DatabaseUtil.getConnection()) {
             try (PreparedStatement itemsStmt = conn.prepareStatement(itemsQuery)) {
@@ -314,7 +316,7 @@ public class Form {
             }
 
             try (PreparedStatement remarksStmt = conn.prepareStatement(remarksQuery)) {
-                remarksStmt.setString(1, ((TextField) inputFields.get(0).node).getText());
+                remarksStmt.setString(1, ((TextField) inputFields.getFirst().node).getText());
 
                 int paramIndex = 2;
                 for (int i = 3; i < inputFields.size(); i++) {
@@ -330,13 +332,10 @@ public class Form {
                         }
                     } else if (field.node instanceof TextField) {
                         String value = ((TextField) field.node).getText();
-                        switch (columnName) {
-                            case "review_number":
-                                remarksStmt.setInt(paramIndex++, Integer.parseInt(value));
-                                break;
-                            default:
-                                remarksStmt.setString(paramIndex++, value);
-                                break;
+                        if (columnName.equals("review_number")) {
+                            remarksStmt.setInt(paramIndex++, Integer.parseInt(value));
+                        } else {
+                            remarksStmt.setString(paramIndex++, value);
                         }
                     } else if (field.node instanceof TextArea) {
                         String value = ((TextArea) field.node).getText();
@@ -346,20 +345,6 @@ public class Form {
                 remarksStmt.executeUpdate();
             }
         }
-    }
-
-    private void showErrorAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
-
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(
-                getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
-        dialogPane.getStyleClass().add("root");
-
-        alert.showAndWait();
     }
 
     public void showEditForm(ObservableList<Object> rowData) {
@@ -411,22 +396,7 @@ public class Form {
             table.setItems(mainWindow.getTable("items", "remarks"));
 
         } catch (SQLException | IllegalArgumentException e) {
-            e.printStackTrace();
-            // Показать сообщение об ошибке пользователю
-            showErrorAlert("Ошибка при обновлении данных: " + e.getMessage());
+            MainWindow.showErrorAlert("Ошибка при обновлении данных", "Не удалось обновить данные в базе.", e.getMessage());
         }
-    }
-
-    private void showErrorAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Ошибка");
-        alert.setHeaderText(message);
-
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(
-                getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css").toExternalForm());
-        dialogPane.getStyleClass().add("root");
-
-        alert.showAndWait();
     }
 }
