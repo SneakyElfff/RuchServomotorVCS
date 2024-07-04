@@ -14,6 +14,7 @@ public class MainWindow {
     private VBox menuPanel;
     private TableView<ObservableList<Object>> table;
     private ComboBox<String> columnComboBox;
+    private ObservableList<ObservableList<Object>> originalData; // Добавлено для хранения исходных данных
 
     public BorderPane createMainPane(Runnable onLogout) {
         // Создание корневого контейнера
@@ -145,12 +146,14 @@ public class MainWindow {
         table.getStylesheets().add(cssPath);
 
         columnComboBox = new ComboBox<>();
+        columnComboBox.setMaxWidth(200);
         columnComboBox.setPromptText("Выберите столбец");
+        columnComboBox.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
 
         // Заполнение таблицы данными из базы данных
         try {
-            ObservableList<ObservableList<Object>> data = getTable("items", "remarks");
-            table.setItems(data);
+            originalData = getTable("items", "remarks"); // Сохраняем исходные данные
+            table.setItems(originalData);
         } catch (SQLException e) {
             showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
         }
@@ -170,8 +173,34 @@ public class MainWindow {
         filterRow.setAlignment(Pos.CENTER);
 
         Label filterLabel = new Label("Фильтр по значению:");
+        filterLabel.setStyle(
+                "-fx-font-size: 16px; " +
+                        "-fx-text-fill: #ffffff;"
+        );
+
         TextField filterField = new TextField();
-        Button filterButton = new Button("Найти запись");
+        filterField.setMaxWidth(200);
+        filterField.setStyle(
+                "-fx-font-size: 16px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #ffffff; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;"
+        );
+
+        Button filterButton = new Button("Найти");
+        Button resetButton = new Button("Сброс");
+
+        String filterButtonStyle =
+                "-fx-font-size: 18px; " +
+                        "-fx-background-color: #df6a1b; " +
+                        "-fx-text-fill: #04060a; " +
+                        "-fx-background-radius: 10px;" +
+                        "-fx-cursor: hand;";
+
+        filterButton.setStyle(filterButtonStyle);
+        resetButton.setStyle(filterButtonStyle);
 
         filterButton.setOnAction(_ -> {
             String filterValue = filterField.getText().trim();
@@ -183,7 +212,16 @@ public class MainWindow {
             }
         });
 
-        filterRow.getChildren().addAll(filterLabel, filterField, columnComboBox, filterButton);
+        resetButton.setOnAction(_ -> {
+            filterField.clear();
+
+            columnComboBox.getSelectionModel().clearSelection();
+            columnComboBox.setPromptText("Выберите столбец");
+
+            table.setItems(originalData); // Сброс данных на исходные
+        });
+
+        filterRow.getChildren().addAll(filterLabel, filterField, columnComboBox, filterButton, resetButton); // Добавлено
         filterBox.getChildren().add(filterRow);
 
         return filterBox;

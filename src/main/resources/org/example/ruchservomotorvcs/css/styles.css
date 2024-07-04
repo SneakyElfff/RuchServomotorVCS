@@ -263,3 +263,72 @@
     -fx-border-radius: 10px;
     -fx-cursor: hand;
 }
+
+
+/* Корневой стиль ComboBox */
+.combo-box {
+    -fx-font-size: 16px;
+    -fx-text-fill: #ffffff;
+    -fx-background-color: #04060a;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+}
+
+/* Стиль кнопки */
+.combo-box .arrow-button {
+    -fx-background-color: #df6a1b;
+    -fx-background-radius: 0 10px 10px 0;
+    -fx-border-color: #04060a;
+    -fx-border-width: 2px;
+    -fx-border-radius: 0 10px 10px 0;
+}
+
+.combo-box .arrow-button .arrow {
+    -fx-background-color: #04060a;
+}
+
+/* Стиль списка */
+.combo-box-popup .list-view {
+    -fx-background-color: #04060a;
+    -fx-text-fill: #df6a1b;
+    -fx-control-inner-background: #04060a;
+    -fx-border-color: #df6a1b;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-radius: 10px;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #df6a1b;
+    -fx-text-fill: #04060a;
+}
+
+/* Общее оформление для полосы прокрутки */
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button,
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent; /* Цвет кнопок прокрутки */
+}
+
+/* Оформление стрелок на кнопках прокрутки */
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: transparent; /* Цвет стрелок */
+    /*-fx-padding: 5px;*/
+}
+
+/* Оформление самой "ручки" прокрутки */
+.scroll-bar .thumb {
+    -fx-background-color: #df6a1b;
+    -fx-background-radius: 10px;
+}
