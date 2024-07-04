@@ -13,6 +13,7 @@ public class MainWindow {
 
     private VBox menuPanel;
     private TableView<ObservableList<Object>> table;
+    private ComboBox<String> columnComboBox;
 
     public BorderPane createMainPane(Runnable onLogout) {
         // Создание корневого контейнера
@@ -143,6 +144,9 @@ public class MainWindow {
         }
         table.getStylesheets().add(cssPath);
 
+        columnComboBox = new ComboBox<>();
+        columnComboBox.setPromptText("Выберите столбец");
+
         // Заполнение таблицы данными из базы данных
         try {
             ObservableList<ObservableList<Object>> data = getTable("items", "remarks");
@@ -151,9 +155,66 @@ public class MainWindow {
             showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
         }
 
-        mainBox.getChildren().addAll(buttonBox, table);
+        VBox filterBox = createFilterBox();
+
+        mainBox.getChildren().addAll(buttonBox, table, filterBox);
 
         return mainBox;
+    }
+
+    private VBox createFilterBox() {
+        VBox filterBox = new VBox(10);
+        filterBox.setAlignment(Pos.CENTER);
+
+        HBox filterRow = new HBox(10);
+        filterRow.setAlignment(Pos.CENTER);
+
+        Label filterLabel = new Label("Фильтр по значению:");
+        TextField filterField = new TextField();
+        Button filterButton = new Button("Найти запись");
+
+        filterButton.setOnAction(_ -> {
+            String filterValue = filterField.getText().trim();
+            String selectedColumn = columnComboBox.getValue();
+            if (selectedColumn != null && !selectedColumn.isEmpty()) {
+                filterTable(selectedColumn, filterValue);
+            } else {
+                showWarningAlert("Пожалуйста, выберите столбец для фильтрации.");
+            }
+        });
+
+        filterRow.getChildren().addAll(filterLabel, filterField, columnComboBox, filterButton);
+        filterBox.getChildren().add(filterRow);
+
+        return filterBox;
+    }
+
+    private void filterTable(String columnName, String filterValue) {
+        ObservableList<ObservableList<Object>> filteredData = FXCollections.observableArrayList();
+
+        // Получение индекса столбца по имени
+        int columnIndex = -1;
+        for (int i = 0; i < table.getColumns().size(); i++) {
+            if (table.getColumns().get(i).getText().equals(columnName)) {
+                columnIndex = i;
+                break;
+            }
+        }
+
+        // Поиск нужной строки
+        if (columnIndex != -1) {
+            if (columnIndex > 2)
+                columnIndex++;
+
+            for (ObservableList<Object> row : table.getItems()) {
+                Object cell = row.get(columnIndex);
+                if (cell != null && cell.toString().contains(filterValue)) {
+                    filteredData.add(row);
+                }
+            }
+        }
+
+        table.setItems(filteredData);
     }
 
     private void showAddRecordForm() {
@@ -193,8 +254,9 @@ public class MainWindow {
         // JOIN для остальных таблиц, если они есть
         for (int i = 1; i < tableNames.length; i++) {
             queryBuilder.append(" JOIN ").append(tableNames[i])
-                    .append(" ON ").append(tableNames[0]).append(".item_number = ")
-                    .append(tableNames[i]).append(".item_number");
+                    .append(" ON ").append(tableNames[0])
+                    .append(".item_number = ").append(tableNames[i])
+                    .append(".item_number");
         }
 
         String query = queryBuilder.toString();
@@ -210,6 +272,25 @@ public class MainWindow {
             table.getColumns().clear();
 
             int counter = 0;
+            // Установка названий столбцов в ComboBox
+            ObservableList<String> columnNames = FXCollections.observableArrayList();
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnName(i);
+
+                // Избежание дублирования столбца
+                if (Objects.equals(columnName, "item_number")) {
+                    counter++;
+                }
+                if (counter == 2) {
+                    counter = 0;
+                    continue;
+                }
+
+                columnNames.add(columnName);
+            }
+            columnComboBox.setItems(columnNames);
+
+            counter = 0;
             // Создание столбцов таблицы на основе метаданных
             for (int i = 1; i <= columnCount; i++) {
                 final int j = i;
