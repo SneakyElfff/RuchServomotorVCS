@@ -24,7 +24,7 @@ public class DatabaseUtil {
                 }
             }
         } catch (SQLException e) {
-            MainWindow.showErrorAlert("Ошибка", "Не удалось проверить наличие пользователя.", e.getMessage());
+            MainWindow.showErrorAlert("Ошибка", "Не удалось получить информацию о пользователе.", e.getMessage());
         }
         return false;
     }
