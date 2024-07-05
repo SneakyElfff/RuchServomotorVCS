@@ -377,7 +377,7 @@ public class Form {
             }
 
             // Обновление таблицы remarks
-            String updateRemarksQuery = "UPDATE замечания SET "Ревизия" = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
+            String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
                 pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
                 pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author

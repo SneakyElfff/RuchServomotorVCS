@@ -206,9 +206,11 @@ public class MainWindow {
             String filterValue = filterField.getText().trim();
             String selectedColumn = columnComboBox.getValue();
             if (selectedColumn != null && !selectedColumn.isEmpty()) {
-                // Обеспечение фильтрации по реальному столбцу в таблице
-                selectedColumn = selectedColumn.replace(" ", "_");
-                filterTable(selectedColumn, filterValue);
+                try {
+                    filterTable(selectedColumn, filterValue);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             } else {
                 showWarningAlert("Пожалуйста, выберите столбец для фильтрации.");
             }
@@ -229,8 +231,10 @@ public class MainWindow {
         return filterBox;
     }
 
-    private void filterTable(String columnName, String filterValue) {
+    private void filterTable(String columnName, String filterValue) throws SQLException {
         ObservableList<ObservableList<Object>> filteredData = FXCollections.observableArrayList();
+
+        originalData = getTable("изделия", "замечания"); // Сохраняем исходные данные
 
         // Получение индекса столбца по имени
         int columnIndex = -1;
