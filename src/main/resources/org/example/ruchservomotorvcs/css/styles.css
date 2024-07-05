@@ -306,6 +306,7 @@
 .combo-box-popup .list-cell:filled:hover {
     -fx-background-color: #df6a1b;
     -fx-text-fill: #04060a;
+    -fx-background-radius: 0;
 }
 
 /* Общее оформление для полосы прокрутки */

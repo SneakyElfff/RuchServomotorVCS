@@ -152,7 +152,7 @@ public class MainWindow {
 
         // Заполнение таблицы данными из базы данных
         try {
-            originalData = getTable("items", "remarks"); // Сохраняем исходные данные
+            originalData = getTable("изделия", "замечания"); // Сохраняем исходные данные
             table.setItems(originalData);
         } catch (SQLException e) {
             showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось получить данные из базы.", e.getMessage());
@@ -206,6 +206,8 @@ public class MainWindow {
             String filterValue = filterField.getText().trim();
             String selectedColumn = columnComboBox.getValue();
             if (selectedColumn != null && !selectedColumn.isEmpty()) {
+                // Обеспечение фильтрации по реальному столбцу в таблице
+                selectedColumn = selectedColumn.replace(" ", "_");
                 filterTable(selectedColumn, filterValue);
             } else {
                 showWarningAlert("Пожалуйста, выберите столбец для фильтрации.");
@@ -293,8 +295,8 @@ public class MainWindow {
         for (int i = 1; i < tableNames.length; i++) {
             queryBuilder.append(" JOIN ").append(tableNames[i])
                     .append(" ON ").append(tableNames[0])
-                    .append(".item_number = ").append(tableNames[i])
-                    .append(".item_number");
+                    .append(".Номер_изделия = ").append(tableNames[i])
+                    .append(".Номер_изделия");
         }
 
         String query = queryBuilder.toString();
@@ -314,9 +316,11 @@ public class MainWindow {
             ObservableList<String> columnNames = FXCollections.observableArrayList();
             for (int i = 1; i <= columnCount; i++) {
                 String columnName = metaData.getColumnName(i);
+                // Обеспечение удобного отображения названий столбцов
+                columnName = columnName.replace("_", " ");
 
                 // Избежание дублирования столбца
-                if (Objects.equals(columnName, "item_number")) {
+                if (Objects.equals(columnName, "Номер изделия")) {
                     counter++;
                 }
                 if (counter == 2) {
@@ -334,8 +338,10 @@ public class MainWindow {
                 final int j = i;
 
                 String columnName = metaData.getColumnName(i);
+                // Обеспечение удобного отображения названий столбцов
+                columnName = columnName.replace("_", " ");
                 // Избежание дублирования столбца
-                if (Objects.equals(columnName, "item_number")) {
+                if (Objects.equals(columnName, "Номер изделия")) {
                     counter++;
                 }
                 if (counter == 2) {
@@ -409,13 +415,13 @@ public class MainWindow {
             Object primaryKey = selectedRow.get(3);
 
             try (Connection conn = DatabaseUtil.getConnection()) {
-//                String query = "DELETE FROM items WHERE item_number = ?";
-//                try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-//                    pstmt.setObject(1, primaryKey);
-//                    pstmt.executeUpdate();
-//                }
+                String query = "DELETE FROM замечания WHERE Номер_изделия = ?";
+                try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                    pstmt.setObject(1, primaryKey);
+                    pstmt.executeUpdate();
+                }
 
-                String query = "DELETE FROM remarks WHERE item_number = ?";
+                query = "DELETE FROM изделия WHERE Номер_изделия = ?";
                 try (PreparedStatement pstmt = conn.prepareStatement(query)) {
                     pstmt.setObject(1, primaryKey);
                     pstmt.executeUpdate();

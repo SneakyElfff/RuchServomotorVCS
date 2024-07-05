@@ -89,11 +89,11 @@ public class Form {
         VBox textFields = new VBox(10);
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            String query = "SELECT i.item_number, i.blueprint_number, i.project_number, " +
-                    "r.revision, r.review_number, r.author, r.review_date, r.in_charge, " +
-                    "r.fix_date, r.review_text, r.notes " +
-                    "FROM items i " +
-                    "JOIN remarks r ON i.item_number = r.item_number LIMIT 1";
+            String query = "SELECT i.Номер_изделия, i.Номер_чертежа, i.Номер_заказа, " +
+                    "r.Ревизия, r.Номер_рассмотрения, r.Автор_внесения_изменения, r.Дата_внесения, r.Ответственный_за_устранение, " +
+                    "r.Дата_исправления, r.Текст_изменения, r.Примечания " +
+                    "FROM изделия i " +
+                    "JOIN замечания r ON i.Номер_изделия = r.Номер_изделия LIMIT 1";
 
             try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
                 ResultSetMetaData metaData = rs.getMetaData();
@@ -101,12 +101,14 @@ public class Form {
 
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnName(i);
+                    // Обеспечение удобного отображения названий столбцов
+                    columnName = columnName.replace("_", " ");
                     Label label = new Label(columnName);
                     label.setAlignment(Pos.CENTER);
                     label.setStyle("-fx-text-fill: #ffffff;");
 
                     Node field;
-                    if (columnName.endsWith("date")) {
+                    if (columnName.startsWith("Дата")) {
                         field = createStyledDatePicker(columnName);
                     } else if (i <= 5) {
                         field = createStyledTextField(columnName);
@@ -138,6 +140,8 @@ public class Form {
                         addFieldToVBox(textFields, label, field);
                     }
 
+                    // Обеспечение получения реальных названий столбцов таблицы БД
+                    columnName = columnName.replace(" ", "_");
                     inputFields.add(new InputField(field, columnName));
                 }
 
@@ -167,7 +171,7 @@ public class Form {
                     updateRecord(inputFields);
                 }
                 formStage.close();
-                table.setItems(mainWindow.getTable("items", "remarks"));
+                table.setItems(mainWindow.getTable("изделия", "замечания"));
             } catch (SQLException e) {
                 MainWindow.showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось выполнить операцию.", e.getMessage());
             }
@@ -277,9 +281,9 @@ public class Form {
     }
 
     private void addRecord(List<InputField> inputFields) throws SQLException {
-        StringBuilder itemsQueryBuilder = new StringBuilder("INSERT INTO items (");
+        StringBuilder itemsQueryBuilder = new StringBuilder("INSERT INTO изделия (");
         StringBuilder itemsValuesBuilder = new StringBuilder("VALUES (");
-        StringBuilder remarksQueryBuilder = new StringBuilder("INSERT INTO remarks (");
+        StringBuilder remarksQueryBuilder = new StringBuilder("INSERT INTO замечания (");
         StringBuilder remarksValuesBuilder = new StringBuilder("VALUES (");
 
         for (int i = 0; i < 3; i++) {
@@ -332,7 +336,7 @@ public class Form {
                         }
                     } else if (field.node instanceof TextField) {
                         String value = ((TextField) field.node).getText();
-                        if (columnName.equals("review_number")) {
+                        if (columnName.equals("Номер_рассмотрения")) {
                             remarksStmt.setInt(paramIndex++, Integer.parseInt(value));
                         } else {
                             remarksStmt.setString(paramIndex++, value);
@@ -342,7 +346,17 @@ public class Form {
                         remarksStmt.setString(paramIndex++, value);
                     }
                 }
-                remarksStmt.executeUpdate();
+                try {
+                    remarksStmt.executeUpdate();
+                } catch (SQLException e) {
+                    // Удаление части данных при ошибке внесения остальных
+                    MainWindow.showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось добавить замечание.", e.getMessage());
+                    String query = "DELETE FROM изделия WHERE Номер_изделия = ?";
+                    try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                        pstmt.setObject(1, ((TextField) inputFields.getFirst().node).getText());
+                        pstmt.executeUpdate();
+                    }
+                }
             }
         }
     }
@@ -354,7 +368,7 @@ public class Form {
     private void updateRecord(List<InputField> inputFields) throws SQLException {
         try (Connection conn = DatabaseUtil.getConnection()) {
             // Обновление таблицы items
-            String updateItemsQuery = "UPDATE items SET blueprint_number = ?, project_number = ? WHERE item_number = ?";
+            String updateItemsQuery = "UPDATE изделия SET Номер_чертежа = ?, Номер_заказа = ? WHERE Номер_изделия = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(updateItemsQuery)) {
                 pstmt.setString(1, ((TextField) inputFields.get(2).node).getText());
                 pstmt.setString(2, ((TextField) inputFields.get(1).node).getText());
@@ -363,7 +377,7 @@ public class Form {
             }
 
             // Обновление таблицы remarks
-            String updateRemarksQuery = "UPDATE remarks SET revision = ?, author = ?, review_date = ?, review_text = ?, in_charge = ?, fix_date = ?, notes = ? WHERE item_number = ? AND review_number = ?";
+            String updateRemarksQuery = "UPDATE замечания SET "Ревизия" = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
                 pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
                 pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author
@@ -393,7 +407,7 @@ public class Form {
 
             // Обновление данных в таблице JavaFX
             formStage.close();
-            table.setItems(mainWindow.getTable("items", "remarks"));
+            table.setItems(mainWindow.getTable("изделия", "замечания"));
 
         } catch (SQLException | IllegalArgumentException e) {
             MainWindow.showErrorAlert("Ошибка при обновлении данных", "Не удалось обновить данные в базе.", e.getMessage());
