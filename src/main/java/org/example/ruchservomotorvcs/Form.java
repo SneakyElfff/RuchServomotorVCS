@@ -90,7 +90,7 @@ public class Form {
 
         try (Connection conn = DatabaseUtil.getConnection()) {
             String query = "SELECT i.Номер_изделия, i.Номер_чертежа, i.Номер_заказа, " +
-                    "r.Ревизия, r.Номер_рассмотрения, r.Автор_внесения_изменения, r.Дата_внесения, r.Ответственный_за_устранение, " +
+                    "r.Ревизия, r.Номер_рассмотрения, r.Автор_внесения_изменения, r.Дата_внесения, r.Статус, r.Ответственный_за_устранение, " +
                     "r.Дата_исправления, r.Текст_изменения, r.Примечания " +
                     "FROM изделия i " +
                     "JOIN замечания r ON i.Номер_изделия = r.Номер_изделия LIMIT 1";
@@ -110,9 +110,9 @@ public class Form {
                     Node field;
                     if (columnName.startsWith("Дата")) {
                         field = createStyledDatePicker(columnName);
-                    } else if (i <= 5) {
-                        field = createStyledTextField(columnName);
-                    } else if (i <= 9) {
+                    } else if (columnName.equals("Статус")) {
+                        field = createStyledComboBox(columnName);
+                    } else if (i <= 10) {
                         field = createStyledTextField(columnName);
                     } else {
                         field = createStyledTextArea(columnName);
@@ -126,15 +126,28 @@ public class Form {
                             case TextArea textArea -> textArea.setText(value != null ? value.toString() : "");
                             case DatePicker datePicker when value instanceof Date ->
                                     datePicker.setValue(((Date) value).toLocalDate());
-                            default -> {
+                            case ComboBox<?> comboBox -> {
+                                if (value != null) {
+                                    String stringValue = value.toString();
+                                    @SuppressWarnings("unchecked")
+                                    ComboBox<String> stringComboBox = (ComboBox<String>) comboBox;
+                                    if (stringComboBox.getItems().contains(stringValue)) {
+                                        stringComboBox.setValue(stringValue);
+                                    } else {
+                                        stringComboBox.getSelectionModel().clearSelection();
+                                    }
+                                } else {
+                                    comboBox.getSelectionModel().clearSelection();
+                                }
                             }
+                            default -> {}
                         }
                     }
 
                     // Добавление полей в форму
                     if (i <= 5) {
                         addFieldToGridPane(numbersRow, label, field, i - 1);
-                    } else if (i <= 9) {
+                    } else if (i <= 10) {
                         addFieldToGridPane(authorsAndDates, label, field, (i - 6) * 2);
                     } else {
                         addFieldToVBox(textFields, label, field);
@@ -232,6 +245,22 @@ public class Form {
                         "-fx-cursor: pointer;"
         );
         return datePicker;
+    }
+
+    private ComboBox<String> createStyledComboBox(String promptText) {
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.getItems().addAll("Внесение", "Рассмотрение", "Выполнение", "Отклонение");
+        comboBox.setPromptText(promptText);
+        comboBox.setMaxWidth(200);
+        comboBox.setStyle(
+                "-fx-font-size: 16px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #ffffff; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;"
+        );
+        return comboBox;
     }
 
     private TextArea createStyledTextArea(String promptText) {
@@ -341,6 +370,9 @@ public class Form {
                         } else {
                             remarksStmt.setString(paramIndex++, value);
                         }
+                    } else if (field.node instanceof ComboBox<?> comboBox) {
+                        Object selectedItem = comboBox.getSelectionModel().getSelectedItem();
+                        remarksStmt.setString(paramIndex++, selectedItem != null ? selectedItem.toString() : null);
                     } else if (field.node instanceof TextArea) {
                         String value = ((TextArea) field.node).getText();
                         remarksStmt.setString(paramIndex++, value);
@@ -377,7 +409,7 @@ public class Form {
             }
 
             // Обновление таблицы remarks
-            String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
+            String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Статус = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
                 pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
                 pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author
@@ -389,19 +421,25 @@ public class Form {
                     pstmt.setNull(3, Types.DATE);
                 }
 
-                pstmt.setString(4, ((TextArea) inputFields.get(9).node).getText()); // review_text
-                pstmt.setString(5, ((TextField) inputFields.get(7).node).getText()); // in_charge
+                pstmt.setString(4, ((TextArea) inputFields.get(10).node).getText()); // review_text
 
-                LocalDate fixDate = ((DatePicker) inputFields.get(8).node).getValue();
-                if (fixDate != null) {
-                    pstmt.setDate(6, java.sql.Date.valueOf(fixDate)); // fix_date
-                } else {
-                    pstmt.setNull(6, Types.DATE);
+                if (inputFields.get(7).node instanceof ComboBox<?> comboBox) {
+                    Object selectedItem = comboBox.getSelectionModel().getSelectedItem();
+                    pstmt.setString(5, selectedItem != null ? selectedItem.toString() : null); // status
                 }
 
-                pstmt.setString(7, ((TextArea) inputFields.get(10).node).getText()); // notes
-                pstmt.setString(8, ((TextField) inputFields.get(0).node).getText()); // item_number
-                pstmt.setInt(9, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+                pstmt.setString(6, ((TextField) inputFields.get(8).node).getText()); // in_charge
+
+                LocalDate fixDate = ((DatePicker) inputFields.get(9).node).getValue();
+                if (fixDate != null) {
+                    pstmt.setDate(7, java.sql.Date.valueOf(fixDate)); // fix_date
+                } else {
+                    pstmt.setNull(7, Types.DATE);
+                }
+
+                pstmt.setString(8, ((TextArea) inputFields.get(11).node).getText()); // notes
+                pstmt.setString(9, ((TextField) inputFields.get(0).node).getText()); // item_number
+                pstmt.setInt(10, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
                 pstmt.executeUpdate();
             }
 
