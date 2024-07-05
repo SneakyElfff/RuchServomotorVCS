@@ -353,9 +353,21 @@ public class MainWindow {
                     continue;
                 }
                 TableColumn<ObservableList<Object>, Object> column = new TableColumn<>(columnName);
-                column.setCellValueFactory(param ->
-                        new SimpleObjectProperty<>(param.getValue().get(j - 1))
-                );
+
+                if (columnName.equals("Изображение")) {
+                    column.setCellValueFactory(param -> {
+                        Object value = param.getValue().get(j - 1);
+                        if (value instanceof byte[] && ((byte[]) value).length > 0) {
+                            return new SimpleObjectProperty<>("🖼️");
+                        } else {
+                            return new SimpleObjectProperty<>("");
+                        }
+                    });
+                } else {
+                    column.setCellValueFactory(param ->
+                            new SimpleObjectProperty<>(param.getValue().get(j - 1))
+                    );
+                }
 
                 // Устанавливаем ширину столбца по длине названия столбца
                 double charWidth = 10; // Примерная ширина одного символа в пикселях

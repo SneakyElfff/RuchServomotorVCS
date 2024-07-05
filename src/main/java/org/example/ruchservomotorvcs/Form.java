@@ -10,10 +10,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.control.DatePicker;
 
+import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -91,7 +94,7 @@ public class Form {
         try (Connection conn = DatabaseUtil.getConnection()) {
             String query = "SELECT i.Номер_изделия, i.Номер_чертежа, i.Номер_заказа, " +
                     "r.Ревизия, r.Номер_рассмотрения, r.Автор_внесения_изменения, r.Дата_внесения, r.Статус, r.Ответственный_за_устранение, " +
-                    "r.Дата_исправления, r.Текст_изменения, r.Примечания " +
+                    "r.Дата_исправления, r.Текст_изменения, r.Примечания, r.Изображение " +
                     "FROM изделия i " +
                     "JOIN замечания r ON i.Номер_изделия = r.Номер_изделия LIMIT 1";
 
@@ -112,6 +115,8 @@ public class Form {
                         field = createStyledDatePicker(columnName);
                     } else if (columnName.equals("Статус")) {
                         field = createStyledComboBox(columnName);
+                    } else if (columnName.equals("Изображение")) {
+                        field = createImageUploadButton(columnName);
                     } else if (i <= 10) {
                         field = createStyledTextField(columnName);
                     } else {
@@ -138,6 +143,15 @@ public class Form {
                                     }
                                 } else {
                                     comboBox.getSelectionModel().clearSelection();
+                                }
+                            }
+                            case HBox hbox -> {
+                                if (value instanceof byte[] imageData) {
+                                    Button uploadButton = (Button) hbox.getChildren().get(0);
+                                    ImageView previewImage = (ImageView) hbox.getChildren().get(1);
+                                    uploadButton.setText("Изменить");
+                                    uploadButton.setUserData(imageData);
+                                    previewImage.setImage(new Image(new ByteArrayInputStream(imageData)));
                                 }
                             }
                             default -> {}
@@ -296,6 +310,45 @@ public class Form {
         return textArea;
     }
 
+    private Node createImageUploadButton(String promptText) {
+        HBox hbox = new HBox(10);
+        Button uploadButton = createStyledButton("Выбрать изображение");
+
+        ImageView previewImage = new ImageView();
+        previewImage.setFitHeight(50);
+        previewImage.setFitWidth(50);
+
+        uploadButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Выберите изображение");
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
+            );
+
+            File selectedFile = fileChooser.showOpenDialog(formStage);
+            if (selectedFile != null) {
+                uploadButton.setText("Изменить");
+                uploadButton.setUserData(selectedFile);
+                previewImage.setImage(new Image(selectedFile.toURI().toString()));
+            }
+        });
+
+        previewImage.setOnMouseClicked(e -> {
+            if (previewImage.getImage() != null) {
+                Stage imageStage = new Stage();
+                ImageView fullSizeImage = new ImageView(previewImage.getImage());
+                fullSizeImage.setPreserveRatio(true);
+                fullSizeImage.setFitHeight(400);
+                Scene scene = new Scene(new StackPane(fullSizeImage));
+                imageStage.setScene(scene);
+                imageStage.show();
+            }
+        });
+
+        hbox.getChildren().addAll(uploadButton, previewImage);
+        return hbox;
+    }
+
     private Button createStyledButton(String text) {
         Button button = new Button(text);
         button.setMinWidth(200);
@@ -376,6 +429,18 @@ public class Form {
                     } else if (field.node instanceof TextArea) {
                         String value = ((TextArea) field.node).getText();
                         remarksStmt.setString(paramIndex++, value);
+                    } else if (field.node instanceof HBox && columnName.equals("Изображение")) {
+                        Button uploadButton = (Button) ((HBox) field.node).getChildren().get(0);
+                        Object userData = uploadButton.getUserData();
+                        if (userData instanceof File) {
+                            File imageFile = (File) userData;
+                            FileInputStream fis = new FileInputStream(imageFile);
+                            remarksStmt.setBinaryStream(paramIndex++, fis, (int) imageFile.length());
+                        } else if (userData instanceof byte[]) {
+                            remarksStmt.setBytes(paramIndex++, (byte[]) userData);
+                        } else {
+                            remarksStmt.setNull(paramIndex++, Types.BINARY);
+                        }
                     }
                 }
                 try {
@@ -389,6 +454,8 @@ public class Form {
                         pstmt.executeUpdate();
                     }
                 }
+            } catch (FileNotFoundException e) {
+                MainWindow.showErrorAlert("Ошибка", "Не удалось загрузить файл.", e.getMessage());
             }
         }
     }
@@ -409,7 +476,7 @@ public class Form {
             }
 
             // Обновление таблицы remarks
-            String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Статус = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
+            String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Статус = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ?, Изображение = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
                 pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
                 pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author
@@ -438,8 +505,25 @@ public class Form {
                 }
 
                 pstmt.setString(8, ((TextArea) inputFields.get(11).node).getText()); // notes
-                pstmt.setString(9, ((TextField) inputFields.get(0).node).getText()); // item_number
-                pstmt.setInt(10, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+
+                // Обработка изображения
+                HBox imageHBox = (HBox) inputFields.get(12).node;
+                Button uploadButton = (Button) imageHBox.getChildren().get(0);
+                Object userData = uploadButton.getUserData();
+                if (userData instanceof File) {
+                    File imageFile = (File) userData;
+                    try (FileInputStream fis = new FileInputStream(imageFile)) {
+                        pstmt.setBinaryStream(9, fis, (int) imageFile.length());
+                    }
+                } else if (userData instanceof byte[]) {
+                    pstmt.setBytes(9, (byte[]) userData);
+                } else {
+                    pstmt.setNull(9, Types.BINARY);
+                }
+
+                pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
+                pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+
                 pstmt.executeUpdate();
             }
 
@@ -447,7 +531,7 @@ public class Form {
             formStage.close();
             table.setItems(mainWindow.getTable("изделия", "замечания"));
 
-        } catch (SQLException | IllegalArgumentException e) {
+        } catch (SQLException | IllegalArgumentException | IOException e) {
             MainWindow.showErrorAlert("Ошибка при обновлении данных", "Не удалось обновить данные в базе.", e.getMessage());
         }
     }
