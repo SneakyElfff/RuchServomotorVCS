@@ -1,10 +1,7 @@
 package org.example.ruchservomotorvcs;
 
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -78,8 +75,13 @@ public class LoginWindow {
             if (usernameField.getText().isEmpty() || passwordField.getText().isEmpty()) {
                 errorLabel.setText("Пожалуйста, заполните все поля.");
             } else {
-                errorLabel.setText("");
-                onLoginSuccess.run();
+                boolean isValidUser = DatabaseUtil.validateUser(usernameField.getText(), passwordField.getText());
+                if (isValidUser) {
+                    errorLabel.setText("");
+                    onLoginSuccess.run();
+                } else {
+                    errorLabel.setText("Неверный логин или пароль.");
+                }
             }
         });
 
