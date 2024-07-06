@@ -11,7 +11,7 @@ public class DatabaseUtil {
     }
 
     public static boolean validateUser(String username, String password) {
-        String query = "SELECT COUNT(*) FROM пользователи WHERE Логин = ? AND Пароль = ?";
+        String query = "SELECT COUNT(*), Роль FROM пользователи WHERE Логин = ? AND Пароль = ? GROUP BY Роль";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -20,6 +20,7 @@ public class DatabaseUtil {
             pstmt.setString(2, password);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    MainWindow.setUserRole(rs.getString("Роль"));
                     return rs.getInt(1) > 0;
                 }
             }

@@ -11,10 +11,15 @@ import java.util.Objects;
 
 public class MainWindow {
 
+    private static String userRole;
     private VBox menuPanel;
     private TableView<ObservableList<Object>> table;
     private ComboBox<String> columnComboBox;
     private ObservableList<ObservableList<Object>> originalData; // Добавлено для хранения исходных данных
+
+    public static void setUserRole(String role) {
+        userRole = role;
+    }
 
     public BorderPane createMainPane(Runnable onLogout) {
         // Создание корневого контейнера
@@ -82,12 +87,15 @@ public class MainWindow {
                         "-fx-max-width: 200px;"
         );
         panel.setAlignment(Pos.TOP_CENTER);
+        panel.setMaxHeight(200);
 
         Label titleLabel = new Label("Меню");
         titleLabel.setStyle("-fx-text-fill: #df6a1b; -fx-font-size: 18px;");
 
-        Separator separator = new Separator();
-        separator.setStyle("-fx-background-color: #df6a1b;");
+        Separator separator1 = new Separator();
+        separator1.setStyle("-fx-background-color: #df6a1b;");
+        Separator separator2 = new Separator();
+        separator2.setStyle("-fx-background-color: #df6a1b;");
 
         Button logoutButton = new Button("Выйти");
         logoutButton.setStyle(
@@ -98,13 +106,168 @@ public class MainWindow {
                         "-fx-cursor: hand;"
         );
 
+        Button addUserButton = new Button("Добавить пользователя");
+        addUserButton.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #df6a1b; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-cursor: hand;"
+        );
+
+        addUserButton.setOnAction(_ -> showAddUserDialog());
+
+        Button deleteUserButton = new Button("Удалить пользователя");
+        deleteUserButton.setStyle(
+                "-fx-font-size: 18px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #df6a1b; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;" +
+                        "-fx-cursor: hand;"
+        );
+
+        deleteUserButton.setOnAction(_ -> showDeleteUserDialog());
+
+        if (!"администратор".equalsIgnoreCase(userRole)) {
+            addUserButton.setVisible(false);
+            deleteUserButton.setVisible(false);
+        }
+
         logoutButton.setOnAction(_ -> {
             toggleMenuPanel(); // Скрыть меню перед выходом
             onLogout.run();
         });
 
-        panel.getChildren().addAll(titleLabel, separator, logoutButton);
+        panel.getChildren().addAll(titleLabel, separator1, logoutButton, separator2, addUserButton, deleteUserButton);
         return panel;
+    }
+
+    private void showAddUserDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Добавить пользователя");
+
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Логин");
+        usernameField.setStyle(
+                "-fx-font-size: 16px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #ffffff; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;"
+        );
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Пароль");
+        passwordField.setStyle(
+                "-fx-font-size: 16px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #ffffff; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;"
+        );
+
+        ComboBox<String> roleComboBox = new ComboBox<>();
+        roleComboBox.getItems().addAll("пользователь", "администратор");
+        roleComboBox.setPromptText("Роль");
+
+        VBox signInFields = new VBox(10, usernameField, passwordField, roleComboBox);
+        signInFields.setAlignment(Pos.CENTER_LEFT);
+
+        dialogPane.setContent(signInFields);
+
+        ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
+        ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialogPane.getButtonTypes().setAll(okButtonType, closeButtonType);
+
+        Button okButton = (Button) dialogPane.lookupButton(okButtonType);
+        okButton.setDefaultButton(true);
+
+        ButtonBar buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
+        buttonBar.setButtonOrder(ButtonBar.BUTTON_ORDER_NONE);
+        buttonBar.getButtons().setAll(okButton, (Button) dialogPane.lookupButton(closeButtonType));
+
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == okButtonType) {
+                String username = usernameField.getText();
+                String password = passwordField.getText();
+                String role = roleComboBox.getValue();
+
+                if (!username.isEmpty() && !password.isEmpty() && role != null) {
+                    try (Connection conn = DatabaseUtil.getConnection();
+                         PreparedStatement pstmt = conn.prepareStatement(
+                                 "INSERT INTO пользователи (Логин, Пароль, Роль) VALUES (?, ?, ?)")) {
+                        pstmt.setString(1, username);
+                        pstmt.setString(2, password);
+                        pstmt.setString(3, role);
+                        pstmt.executeUpdate();
+                    } catch (SQLException e) {
+                        showErrorAlert("Ошибка", "Не удалось добавить пользователя.", e.getMessage());
+                    }
+                } else {
+                    showWarningAlert("Пожалуйста, заполните все поля.");
+                }
+            }
+        });
+    }
+
+    private void showDeleteUserDialog() {
+        TextInputDialog loginFiled = new TextInputDialog();
+        loginFiled.setTitle("Удалить пользователя");
+        loginFiled.setHeaderText("Введите логин пользователя для удаления:");
+
+        DialogPane dialogPane = loginFiled.getDialogPane();
+        dialogPane.getStylesheets().add(
+                Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+        TextField inputField = loginFiled.getEditor();
+        inputField.setStyle(
+                "-fx-font-size: 16px; " +
+                        "-fx-background-color: #04060a; " +
+                        "-fx-text-fill: #ffffff; " +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px;"
+        );
+
+        ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
+        ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialogPane.getButtonTypes().setAll(okButtonType, closeButtonType);
+
+        Button okButton = (Button) dialogPane.lookupButton(okButtonType);
+        okButton.setDefaultButton(true);
+
+        ButtonBar buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
+        buttonBar.setButtonOrder(ButtonBar.BUTTON_ORDER_NONE);
+        buttonBar.getButtons().setAll(okButton, (Button) dialogPane.lookupButton(closeButtonType));
+
+        loginFiled.showAndWait().ifPresent(username -> {
+            if (!username.isEmpty()) {
+                try (Connection conn = DatabaseUtil.getConnection();
+                     PreparedStatement pstmt = conn.prepareStatement("DELETE FROM пользователи WHERE Логин = ?")) {
+                    pstmt.setString(1, username);
+                    int rowsAffected = pstmt.executeUpdate();
+                    if (rowsAffected == 0) {
+                        showWarningAlert("Пользователь с логином " + username + " не найден.");
+                    }
+                } catch (SQLException e) {
+                    showErrorAlert("Ошибка", "Не удалось удалить пользователя.", e.getMessage());
+                }
+            } else {
+                showWarningAlert("Пожалуйста, введите логин.");
+            }
+        });
     }
 
     private VBox createMainBox() {
