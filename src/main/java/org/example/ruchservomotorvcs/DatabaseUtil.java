@@ -3,11 +3,12 @@ package org.example.ruchservomotorvcs;
 import java.sql.*;
 
 public class DatabaseUtil {
-    private static final String URL = "jdbc:postgresql://localhost:5432/VCS";
-    private static final String USER = "nina";
+    private static final String URL = "jdbc:postgresql://aws-0-eu-central-1.pooler.supabase.com:6543/postgres";
+    private static final String USER = "postgres.lchxrjzjnwbbvrlahfix";
+    private static final String PASSWORD = "wobso4-riqfYm-rinnon";
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, "");
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
     public static boolean validateUser(String username, String password) {
