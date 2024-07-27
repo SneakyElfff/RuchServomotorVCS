@@ -76,7 +76,7 @@ public class Form {
 
         // Шапка формы с основными идентификаторами
         HBox headline = new HBox(10);
-        ImageView logo = new ImageView(new Image("file:src/main/resources/org/example/ruchservomotorvcs/images/logo.png"));
+        ImageView logo = new ImageView(new Image(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png").toExternalForm()));
         logo.setFitHeight(50);
         logo.setPreserveRatio(true);
 
@@ -469,8 +469,8 @@ public class Form {
             // Обновление таблицы items
             String updateItemsQuery = "UPDATE изделия SET Номер_чертежа = ?, Номер_заказа = ? WHERE Номер_изделия = ?";
             try (PreparedStatement pstmt = conn.prepareStatement(updateItemsQuery)) {
-                pstmt.setString(1, ((TextField) inputFields.get(2).node).getText());
-                pstmt.setString(2, ((TextField) inputFields.get(1).node).getText());
+                pstmt.setString(1, ((TextField) inputFields.get(1).node).getText());
+                pstmt.setString(2, ((TextField) inputFields.get(2).node).getText());
                 pstmt.setString(3, ((TextField) inputFields.get(0).node).getText());
                 pstmt.executeUpdate();
             }
@@ -514,17 +514,26 @@ public class Form {
                     File imageFile = (File) userData;
                     try (FileInputStream fis = new FileInputStream(imageFile)) {
                         pstmt.setBinaryStream(9, fis, (int) imageFile.length());
+
+                        // убедиться, что поток не закрывается до выполнения executeUpdate()
+                        pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
+                        pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+                        pstmt.executeUpdate();
                     }
                 } else if (userData instanceof byte[]) {
                     pstmt.setBytes(9, (byte[]) userData);
+
+                    pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
+                    pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+                    pstmt.executeUpdate();
                 } else {
                     pstmt.setNull(9, Types.BINARY);
+
+                    pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
+                    pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
+                    pstmt.executeUpdate();
                 }
 
-                pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
-                pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
-
-                pstmt.executeUpdate();
             }
 
             // Обновление данных в таблице JavaFX

@@ -521,7 +521,7 @@ public class MainWindow {
                     column.setCellValueFactory(param -> {
                         Object value = param.getValue().get(j - 1);
                         if (value instanceof byte[] && ((byte[]) value).length > 0) {
-                            return new SimpleObjectProperty<>("🖼️");
+                            return new SimpleObjectProperty<>("️\u2398");
                         } else {
                             return new SimpleObjectProperty<>("");
                         }
