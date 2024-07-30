@@ -62,33 +62,12 @@ public class Form {
     }
 
     private VBox createFormBox() {
-        VBox formBox = new VBox(10);
-        formBox.setAlignment(Pos.TOP_CENTER);
-        formBox.setStyle(
-                "-fx-background-color: #04060a;" +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px; " +
-                        "-fx-padding: 20px;"
-        );
-
+        VBox formBox = createStyledFormBox();
         List<InputField> inputFields = new ArrayList<>();
 
-        // Шапка формы с основными идентификаторами
-        HBox headline = new HBox(10);
-        ImageView logo = new ImageView(new Image(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png").toExternalForm()));
-        logo.setFitHeight(50);
-        logo.setPreserveRatio(true);
-
-        GridPane numbersRow = new GridPane();
-        numbersRow.setHgap(10);
-        numbersRow.setVgap(5);
-
-        // Данные авторов и дат замечания
-        GridPane authorsAndDates = new GridPane();
-        authorsAndDates.setHgap(10);
-        authorsAndDates.setVgap(10);
-
+        HBox headline = createHeadline();
+        GridPane numbersRow = createGridPane(10, 5);
+        GridPane authorsAndDates = createGridPane(10, 10);
         VBox textFields = new VBox(10);
 
         try (Connection conn = DatabaseUtil.getConnection()) {
@@ -99,85 +78,10 @@ public class Form {
                     "JOIN замечания r ON i.Номер_изделия = r.Номер_изделия LIMIT 1";
 
             try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-                ResultSetMetaData metaData = rs.getMetaData();
-                int columnCount = metaData.getColumnCount();
+                processResultSet(rs, inputFields, numbersRow, authorsAndDates, textFields);
+                headline.getChildren().addAll(createLogo(), numbersRow);
 
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = metaData.getColumnName(i);
-                    // Обеспечение удобного отображения названий столбцов
-                    columnName = columnName.replace("_", " ");
-                    Label label = new Label(columnName);
-                    label.setAlignment(Pos.CENTER);
-                    label.setStyle("-fx-text-fill: #ffffff;");
-
-                    Node field;
-                    if (columnName.startsWith("Дата")) {
-                        field = createStyledDatePicker(columnName);
-                    } else if (columnName.equals("Статус")) {
-                        field = createStyledComboBox(columnName);
-                    } else if (columnName.equals("Изображение")) {
-                        field = createImageUploadButton(columnName);
-                    } else if (i <= 10) {
-                        field = createStyledTextField(columnName);
-                    } else {
-                        field = createStyledTextArea(columnName);
-                    }
-
-                    // Заполнение полей данными, если это редактирование
-                    if (editingRowData != null && i - 1 < editingRowData.size()) {
-                        Object value = editingRowData.get(i - 1);
-                        switch (field) {
-                            case TextField textField -> textField.setText(value != null ? value.toString() : "");
-                            case TextArea textArea -> textArea.setText(value != null ? value.toString() : "");
-                            case DatePicker datePicker when value instanceof Date ->
-                                    datePicker.setValue(((Date) value).toLocalDate());
-                            case ComboBox<?> comboBox -> {
-                                if (value != null) {
-                                    String stringValue = value.toString();
-                                    @SuppressWarnings("unchecked")
-                                    ComboBox<String> stringComboBox = (ComboBox<String>) comboBox;
-                                    if (stringComboBox.getItems().contains(stringValue)) {
-                                        stringComboBox.setValue(stringValue);
-                                    } else {
-                                        stringComboBox.getSelectionModel().clearSelection();
-                                    }
-                                } else {
-                                    comboBox.getSelectionModel().clearSelection();
-                                }
-                            }
-                            case HBox hbox -> {
-                                if (value instanceof byte[] imageData) {
-                                    Button uploadButton = (Button) hbox.getChildren().get(0);
-                                    ImageView previewImage = (ImageView) hbox.getChildren().get(1);
-                                    uploadButton.setText("Изменить");
-                                    uploadButton.setUserData(imageData);
-                                    previewImage.setImage(new Image(new ByteArrayInputStream(imageData)));
-                                }
-                            }
-                            default -> {}
-                        }
-                    }
-
-                    // Добавление полей в форму
-                    if (i <= 5) {
-                        addFieldToGridPane(numbersRow, label, field, i - 1);
-                    } else if (i <= 10) {
-                        addFieldToGridPane(authorsAndDates, label, field, (i - 6) * 2);
-                    } else {
-                        addFieldToVBox(textFields, label, field);
-                    }
-
-                    // Обеспечение получения реальных названий столбцов таблицы БД
-                    columnName = columnName.replace(" ", "_");
-                    inputFields.add(new InputField(field, columnName));
-                }
-
-                headline.getChildren().addAll(logo, numbersRow);
-
-                HBox buttonBox = new HBox(10);
-                buttonBox.setAlignment(Pos.CENTER);
-                buttonBox.getChildren().addAll(createActionButton(inputFields), createCloseButton());
-
+                HBox buttonBox = createButtonBox(inputFields);
                 formBox.getChildren().addAll(headline, authorsAndDates, textFields, buttonBox);
                 return formBox;
             }
@@ -186,6 +90,129 @@ public class Form {
         }
 
         return formBox;
+    }
+
+    private VBox createStyledFormBox() {
+        VBox formBox = new VBox(10);
+        formBox.setAlignment(Pos.TOP_CENTER);
+        formBox.setStyle(
+                "-fx-background-color: #04060a;" +
+                        "-fx-border-color: #df6a1b; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 10px; " +
+                        "-fx-padding: 20px;"
+        );
+        return formBox;
+    }
+
+    private HBox createHeadline() {
+        return new HBox(10);
+    }
+
+    private GridPane createGridPane(int hgap, int vgap) {
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(hgap);
+        gridPane.setVgap(vgap);
+        return gridPane;
+    }
+
+    private ImageView createLogo() {
+        ImageView logo = new ImageView(new Image(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png").toExternalForm()));
+        logo.setFitHeight(50);
+        logo.setPreserveRatio(true);
+        return logo;
+    }
+
+    private void processResultSet(ResultSet rs, List<InputField> inputFields, GridPane numbersRow, GridPane authorsAndDates, VBox textFields) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+
+        for (int i = 1; i <= columnCount; i++) {
+            String columnName = metaData.getColumnName(i).replace("_", " ");
+            Label label = createStyledLabel(columnName);
+            Node field = createField(columnName, i);
+
+            if (editingRowData != null && i - 1 < editingRowData.size()) {
+                fillFieldWithData(field, editingRowData.get(i - 1));
+            }
+
+            if (i <= 5) {
+                addFieldToGridPane(numbersRow, label, field, i - 1);
+            } else if (i <= 10) {
+                addFieldToGridPane(authorsAndDates, label, field, (i - 6) * 2);
+            } else {
+                addFieldToVBox(textFields, label, field);
+            }
+
+            inputFields.add(new InputField(field, columnName.replace(" ", "_")));
+        }
+    }
+
+    private Label createStyledLabel(String text) {
+        Label label = new Label(text);
+        label.setAlignment(Pos.CENTER);
+        label.setStyle("-fx-text-fill: #ffffff;");
+        return label;
+    }
+
+    private Node createField(String columnName, int columnIndex) {
+        if (columnName.startsWith("Дата")) {
+            return createStyledDatePicker(columnName);
+        } else if (columnName.equals("Статус")) {
+            return createStyledComboBox(columnName);
+        } else if (columnName.equals("Изображение")) {
+            return createImageUploadButton(columnName);
+        } else if (columnIndex <= 10) {
+            return createStyledTextField(columnName);
+        } else {
+            return createStyledTextArea(columnName);
+        }
+    }
+
+    private void fillFieldWithData(Node field, Object value) {
+        if (field instanceof TextField textField) {
+            textField.setText(value != null ? value.toString() : "");
+        } else if (field instanceof TextArea textArea) {
+            textArea.setText(value != null ? value.toString() : "");
+        } else if (field instanceof DatePicker datePicker && value instanceof Date) {
+            datePicker.setValue(((Date) value).toLocalDate());
+        } else if (field instanceof ComboBox<?> comboBox) {
+            fillComboBox(comboBox, value);
+        } else if (field instanceof HBox hbox) {
+            fillImageUploadButton(hbox, value);
+        }
+    }
+
+    private void fillComboBox(ComboBox<?> comboBox, Object value) {
+        if (value != null) {
+            String stringValue = value.toString();
+            @SuppressWarnings("unchecked")
+            ComboBox<String> stringComboBox = (ComboBox<String>) comboBox;
+            if (stringComboBox.getItems().contains(stringValue)) {
+                stringComboBox.setValue(stringValue);
+            } else {
+                stringComboBox.getSelectionModel().clearSelection();
+            }
+        } else {
+            comboBox.getSelectionModel().clearSelection();
+        }
+    }
+
+    private void fillImageUploadButton(HBox hbox, Object value) {
+        if (value instanceof byte[] imageData) {
+            Button uploadButton = (Button) hbox.getChildren().get(0);
+            ImageView previewImage = (ImageView) hbox.getChildren().get(1);
+            uploadButton.setText("Изменить");
+            uploadButton.setUserData(imageData);
+            previewImage.setImage(new Image(new ByteArrayInputStream(imageData)));
+        }
+    }
+
+    private HBox createButtonBox(List<InputField> inputFields) {
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getChildren().addAll(createActionButton(inputFields), createCloseButton());
+        return buttonBox;
     }
 
     private Button createActionButton(List<InputField> inputFields) {
@@ -363,100 +390,126 @@ public class Form {
     }
 
     private void addRecord(List<InputField> inputFields) throws SQLException {
-        StringBuilder itemsQueryBuilder = new StringBuilder("INSERT INTO изделия (");
-        StringBuilder itemsValuesBuilder = new StringBuilder("VALUES (");
-        StringBuilder remarksQueryBuilder = new StringBuilder("INSERT INTO замечания (");
-        StringBuilder remarksValuesBuilder = new StringBuilder("VALUES (");
-
-        for (int i = 0; i < 3; i++) {
-            itemsQueryBuilder.append(inputFields.get(i).columnName);
-            itemsValuesBuilder.append("?");
-            if (i < 2) {
-                itemsQueryBuilder.append(", ");
-                itemsValuesBuilder.append(", ");
-            }
-        }
-        itemsQueryBuilder.append(") ");
-        itemsValuesBuilder.append(")");
-
-        remarksQueryBuilder.append(inputFields.getFirst().columnName);
-        remarksValuesBuilder.append("?");
-
-        for (int i = 3; i < inputFields.size(); i++) {
-            remarksQueryBuilder.append(", ").append(inputFields.get(i).columnName);
-            remarksValuesBuilder.append(", ?");
-        }
-
-        remarksQueryBuilder.append(") ");
-        remarksValuesBuilder.append(")");
-
-        String itemsQuery = itemsQueryBuilder + itemsValuesBuilder.toString();
-        String remarksQuery = remarksQueryBuilder + remarksValuesBuilder.toString();
+        String itemsQuery = buildInsertItemsQuery("изделия", inputFields.subList(0, 3));
+        String remarksQuery = buildInsertRemarksQuery("замечания", inputFields);
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            try (PreparedStatement itemsStmt = conn.prepareStatement(itemsQuery)) {
-                for (int i = 0; i < 3; i++) {
-                    itemsStmt.setString(i + 1, ((TextField) inputFields.get(i).node).getText());
-                }
-                itemsStmt.executeUpdate();
+            insertItemsRecord(conn, itemsQuery, inputFields);
+            insertRemarksRecord(conn, remarksQuery, inputFields);
+        }
+    }
+
+    private String buildInsertItemsQuery(String tableName, List<InputField> fields) {
+        StringBuilder queryBuilder = new StringBuilder("INSERT INTO ").append(tableName).append(" (");
+        StringBuilder valuesBuilder = new StringBuilder("VALUES (");
+
+        for (int i = 0; i < fields.size(); i++) {
+            queryBuilder.append(fields.get(i).columnName);
+            valuesBuilder.append("?");
+            if (i < fields.size() - 1) {
+                queryBuilder.append(", ");
+                valuesBuilder.append(", ");
+            }
+        }
+        queryBuilder.append(") ");
+        valuesBuilder.append(")");
+
+        return queryBuilder.append(valuesBuilder.toString()).toString();
+    }
+
+    private String buildInsertRemarksQuery(String tableName, List<InputField> fields) {
+        StringBuilder queryBuilder = new StringBuilder("INSERT INTO ").append(tableName).append(" (");
+        StringBuilder valuesBuilder = new StringBuilder("VALUES (");
+
+        queryBuilder.append(fields.getFirst().columnName);
+        valuesBuilder.append("?");
+
+        for (int i = 3; i < fields.size(); i++) {
+            queryBuilder.append(", ").append(fields.get(i).columnName);
+            valuesBuilder.append(", ?");
+        }
+
+        queryBuilder.append(") ");
+        valuesBuilder.append(")");
+
+        return queryBuilder.append(valuesBuilder.toString()).toString();
+    }
+
+    private void insertItemsRecord(Connection conn, String query, List<InputField> inputFields) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            for (int i = 0; i < 3; i++) {
+                stmt.setString(i + 1, ((TextField) inputFields.get(i).node).getText());
+            }
+            stmt.executeUpdate();
+        }
+    }
+
+    private void insertRemarksRecord(Connection conn, String query, List<InputField> inputFields) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, ((TextField) inputFields.getFirst().node).getText());
+
+            int paramIndex = 2;
+            for (int i = 3; i < inputFields.size(); i++) {
+                InputField field = inputFields.get(i);
+                setStatementParameter(stmt, paramIndex++, field);
             }
 
-            try (PreparedStatement remarksStmt = conn.prepareStatement(remarksQuery)) {
-                remarksStmt.setString(1, ((TextField) inputFields.getFirst().node).getText());
-
-                int paramIndex = 2;
-                for (int i = 3; i < inputFields.size(); i++) {
-                    InputField field = inputFields.get(i);
-                    String columnName = field.columnName;
-
-                    if (field.node instanceof DatePicker) {
-                        LocalDate date = ((DatePicker) field.node).getValue();
-                        if (date != null) {
-                            remarksStmt.setDate(paramIndex++, java.sql.Date.valueOf(date));
-                        } else {
-                            remarksStmt.setNull(paramIndex++, Types.DATE);
-                        }
-                    } else if (field.node instanceof TextField) {
-                        String value = ((TextField) field.node).getText();
-                        if (columnName.equals("Номер_рассмотрения")) {
-                            remarksStmt.setInt(paramIndex++, Integer.parseInt(value));
-                        } else {
-                            remarksStmt.setString(paramIndex++, value);
-                        }
-                    } else if (field.node instanceof ComboBox<?> comboBox) {
-                        Object selectedItem = comboBox.getSelectionModel().getSelectedItem();
-                        remarksStmt.setString(paramIndex++, selectedItem != null ? selectedItem.toString() : null);
-                    } else if (field.node instanceof TextArea) {
-                        String value = ((TextArea) field.node).getText();
-                        remarksStmt.setString(paramIndex++, value);
-                    } else if (field.node instanceof HBox && columnName.equals("Изображение")) {
-                        Button uploadButton = (Button) ((HBox) field.node).getChildren().get(0);
-                        Object userData = uploadButton.getUserData();
-                        if (userData instanceof File) {
-                            File imageFile = (File) userData;
-                            FileInputStream fis = new FileInputStream(imageFile);
-                            remarksStmt.setBinaryStream(paramIndex++, fis, (int) imageFile.length());
-                        } else if (userData instanceof byte[]) {
-                            remarksStmt.setBytes(paramIndex++, (byte[]) userData);
-                        } else {
-                            remarksStmt.setNull(paramIndex++, Types.BINARY);
-                        }
-                    }
-                }
-                try {
-                    remarksStmt.executeUpdate();
-                } catch (SQLException e) {
-                    // Удаление части данных при ошибке внесения остальных
-                    MainWindow.showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось добавить замечание.", e.getMessage());
-                    String query = "DELETE FROM изделия WHERE Номер_изделия = ?";
-                    try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                        pstmt.setObject(1, ((TextField) inputFields.getFirst().node).getText());
-                        pstmt.executeUpdate();
-                    }
-                }
-            } catch (FileNotFoundException e) {
-                MainWindow.showErrorAlert("Ошибка", "Не удалось загрузить файл.", e.getMessage());
+            try {
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                handleInsertRemarksError(conn, inputFields.getFirst(), e);
             }
+        } catch (FileNotFoundException e) {
+            MainWindow.showErrorAlert("Ошибка", "Не удалось загрузить файл.", e.getMessage());
+        }
+    }
+
+    private void setStatementParameter(PreparedStatement stmt, int paramIndex, InputField field) throws SQLException, FileNotFoundException {
+        if (field.node instanceof DatePicker) {
+            LocalDate date = ((DatePicker) field.node).getValue();
+            if (date != null) {
+                stmt.setDate(paramIndex, java.sql.Date.valueOf(date));
+            } else {
+                stmt.setNull(paramIndex, Types.DATE);
+            }
+        } else if (field.node instanceof TextField) {
+            String value = ((TextField) field.node).getText();
+            if (field.columnName.equals("Номер_рассмотрения")) {
+                stmt.setInt(paramIndex, Integer.parseInt(value));
+            } else {
+                stmt.setString(paramIndex, value);
+            }
+        } else if (field.node instanceof ComboBox<?> comboBox) {
+            Object selectedItem = comboBox.getSelectionModel().getSelectedItem();
+            stmt.setString(paramIndex, selectedItem != null ? selectedItem.toString() : null);
+        } else if (field.node instanceof TextArea) {
+            String value = ((TextArea) field.node).getText();
+            stmt.setString(paramIndex, value);
+        } else if (field.node instanceof HBox && field.columnName.equals("Изображение")) {
+            setImageParameter(stmt, paramIndex, (HBox) field.node);
+        }
+    }
+
+    private void setImageParameter(PreparedStatement stmt, int paramIndex, HBox hbox) throws SQLException, FileNotFoundException {
+        Button uploadButton = (Button) hbox.getChildren().getFirst();
+        Object userData = uploadButton.getUserData();
+        if (userData instanceof File) {
+            File imageFile = (File) userData;
+            FileInputStream fis = new FileInputStream(imageFile);
+            stmt.setBinaryStream(paramIndex, fis, (int) imageFile.length());
+        } else if (userData instanceof byte[]) {
+            stmt.setBytes(paramIndex, (byte[]) userData);
+        } else {
+            stmt.setNull(paramIndex, Types.BINARY);
+        }
+    }
+
+    private void handleInsertRemarksError(Connection conn, InputField firstField, SQLException e) throws SQLException {
+        MainWindow.showErrorAlert("Ошибка взаимодействия с базой данных", "Не удалось добавить замечание.", e.getMessage());
+        String query = "DELETE FROM изделия WHERE Номер_изделия = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setObject(1, ((TextField) firstField.node).getText());
+            pstmt.executeUpdate();
         }
     }
 
@@ -466,75 +519,8 @@ public class Form {
 
     private void updateRecord(List<InputField> inputFields) throws SQLException {
         try (Connection conn = DatabaseUtil.getConnection()) {
-            // Обновление таблицы items
-            String updateItemsQuery = "UPDATE изделия SET Номер_чертежа = ?, Номер_заказа = ? WHERE Номер_изделия = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(updateItemsQuery)) {
-                pstmt.setString(1, ((TextField) inputFields.get(1).node).getText());
-                pstmt.setString(2, ((TextField) inputFields.get(2).node).getText());
-                pstmt.setString(3, ((TextField) inputFields.get(0).node).getText());
-                pstmt.executeUpdate();
-            }
-
-            // Обновление таблицы remarks
-            String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Статус = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ?, Изображение = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
-                pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
-                pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author
-
-                LocalDate reviewDate = ((DatePicker) inputFields.get(6).node).getValue();
-                if (reviewDate != null) {
-                    pstmt.setDate(3, java.sql.Date.valueOf(reviewDate)); // review_date
-                } else {
-                    pstmt.setNull(3, Types.DATE);
-                }
-
-                pstmt.setString(4, ((TextArea) inputFields.get(10).node).getText()); // review_text
-
-                if (inputFields.get(7).node instanceof ComboBox<?> comboBox) {
-                    Object selectedItem = comboBox.getSelectionModel().getSelectedItem();
-                    pstmt.setString(5, selectedItem != null ? selectedItem.toString() : null); // status
-                }
-
-                pstmt.setString(6, ((TextField) inputFields.get(8).node).getText()); // in_charge
-
-                LocalDate fixDate = ((DatePicker) inputFields.get(9).node).getValue();
-                if (fixDate != null) {
-                    pstmt.setDate(7, java.sql.Date.valueOf(fixDate)); // fix_date
-                } else {
-                    pstmt.setNull(7, Types.DATE);
-                }
-
-                pstmt.setString(8, ((TextArea) inputFields.get(11).node).getText()); // notes
-
-                // Обработка изображения
-                HBox imageHBox = (HBox) inputFields.get(12).node;
-                Button uploadButton = (Button) imageHBox.getChildren().get(0);
-                Object userData = uploadButton.getUserData();
-                if (userData instanceof File) {
-                    File imageFile = (File) userData;
-                    try (FileInputStream fis = new FileInputStream(imageFile)) {
-                        pstmt.setBinaryStream(9, fis, (int) imageFile.length());
-
-                        // убедиться, что поток не закрывается до выполнения executeUpdate()
-                        pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
-                        pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
-                        pstmt.executeUpdate();
-                    }
-                } else if (userData instanceof byte[]) {
-                    pstmt.setBytes(9, (byte[]) userData);
-
-                    pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
-                    pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
-                    pstmt.executeUpdate();
-                } else {
-                    pstmt.setNull(9, Types.BINARY);
-
-                    pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
-                    pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
-                    pstmt.executeUpdate();
-                }
-
-            }
+            updateItemsTable(conn, inputFields);
+            updateRemarksTable(conn, inputFields);
 
             // Обновление данных в таблице JavaFX
             formStage.close();
@@ -543,5 +529,58 @@ public class Form {
         } catch (SQLException | IllegalArgumentException | IOException e) {
             MainWindow.showErrorAlert("Ошибка при обновлении данных", "Не удалось обновить данные в базе.", e.getMessage());
         }
+    }
+
+    private void updateItemsTable(Connection conn, List<InputField> inputFields) throws SQLException {
+        String updateItemsQuery = "UPDATE изделия SET Номер_чертежа = ?, Номер_заказа = ? WHERE Номер_изделия = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(updateItemsQuery)) {
+            pstmt.setString(1, ((TextField) inputFields.get(1).node).getText());
+            pstmt.setString(2, ((TextField) inputFields.get(2).node).getText());
+            pstmt.setString(3, ((TextField) inputFields.get(0).node).getText());
+            pstmt.executeUpdate();
+        }
+    }
+
+    private void updateRemarksTable(Connection conn, List<InputField> inputFields) throws SQLException, IOException {
+        String updateRemarksQuery = "UPDATE замечания SET Ревизия = ?, Автор_внесения_изменения = ?, Дата_внесения = ?, Текст_изменения = ?, Статус = ?, Ответственный_за_устранение = ?, Дата_исправления = ?, Примечания = ?, Изображение = ? WHERE Номер_изделия = ? AND Номер_рассмотрения = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(updateRemarksQuery)) {
+            setUpdateRemarksParameters(pstmt, inputFields);
+            pstmt.executeUpdate();
+        }
+    }
+
+    private void setUpdateRemarksParameters(PreparedStatement pstmt, List<InputField> inputFields) throws SQLException, IOException {
+        pstmt.setString(1, ((TextField) inputFields.get(3).node).getText()); // revision
+        pstmt.setString(2, ((TextField) inputFields.get(5).node).getText()); // author
+
+        LocalDate reviewDate = ((DatePicker) inputFields.get(6).node).getValue();
+        if (reviewDate != null) {
+            pstmt.setDate(3, java.sql.Date.valueOf(reviewDate)); // review_date
+        } else {
+            pstmt.setNull(3, Types.DATE);
+        }
+
+        pstmt.setString(4, ((TextArea) inputFields.get(10).node).getText()); // review_text
+
+        if (inputFields.get(7).node instanceof ComboBox<?> comboBox) {
+            Object selectedItem = comboBox.getSelectionModel().getSelectedItem();
+            pstmt.setString(5, selectedItem != null ? selectedItem.toString() : null); // status
+        }
+
+        pstmt.setString(6, ((TextField) inputFields.get(8).node).getText()); // in_charge
+
+        LocalDate fixDate = ((DatePicker) inputFields.get(9).node).getValue();
+        if (fixDate != null) {
+            pstmt.setDate(7, java.sql.Date.valueOf(fixDate)); // fix_date
+        } else {
+            pstmt.setNull(7, Types.DATE);
+        }
+
+        pstmt.setString(8, ((TextArea) inputFields.get(11).node).getText()); // notes
+
+        setImageParameter(pstmt, 9, (HBox) inputFields.get(12).node); // image
+
+        pstmt.setString(10, ((TextField) inputFields.get(0).node).getText()); // item_number
+        pstmt.setInt(11, Integer.parseInt(((TextField) inputFields.get(4).node).getText())); // review_number
     }
 }
