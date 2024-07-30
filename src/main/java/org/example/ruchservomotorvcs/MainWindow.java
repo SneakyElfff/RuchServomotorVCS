@@ -17,6 +17,11 @@ public class MainWindow {
     private ComboBox<String> columnComboBox;
     private ObservableList<ObservableList<Object>> originalData; // Добавлено для хранения исходных данных
 
+    private static final String COMMON_CSS_STYLE = "-fx-background-color: #04060a; " +
+            "-fx-border-color: #df6a1b; " +
+            "-fx-border-width: 2px; " +
+            "-fx-border-radius: 10px;";
+
     public static void setUserRole(String role) {
         userRole = role;
     }
@@ -24,13 +29,7 @@ public class MainWindow {
     public BorderPane createMainPane(Runnable onLogout) {
         // Создание корневого контейнера
         BorderPane root = new BorderPane();
-        root.setStyle(
-                "-fx-background-color: #04060a;" +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px; " +
-                        "-fx-padding: 20px;"
-        );
+        root.setStyle(COMMON_CSS_STYLE + "-fx-padding: 20px;");
 
         VBox mainBox = createMainBox();
         Button menuButton = createMenuButton();
@@ -55,15 +54,9 @@ public class MainWindow {
     private Button createMenuButton() {
         Button menuButton = new Button("☰");
         menuButton.setMinWidth(40);
-        menuButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #df6a1b; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+        menuButton.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
+                "-fx-text-fill: #df6a1b; " +
+                "-fx-cursor: hand;");
 
         menuButton.setOnAction(_ -> toggleMenuPanel());
 
@@ -77,15 +70,9 @@ public class MainWindow {
 
     private VBox createMenuPanel(Runnable onLogout) {
         VBox panel = new VBox(10);
-        panel.setStyle(
-                "-fx-background-color: #04060a;" +
-                        "-fx-border-color: #df6a1b;" +
-                        "-fx-border-width: 2px;" +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-padding: 10px;" +
-                        "-fx-min-width: 200px;" +
-                        "-fx-max-width: 200px;"
-        );
+        panel.setStyle(COMMON_CSS_STYLE + "-fx-padding: 10px;" +
+                "-fx-min-width: 200px;" +
+                "-fx-max-width: 200px;");
         panel.setAlignment(Pos.TOP_CENTER);
         panel.setMaxHeight(200);
 
@@ -107,28 +94,16 @@ public class MainWindow {
         );
 
         Button addUserButton = new Button("Добавить пользователя");
-        addUserButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #df6a1b; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+        addUserButton.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
+                "-fx-text-fill: #df6a1b; " +
+                "-fx-cursor: hand;");
 
         addUserButton.setOnAction(_ -> showAddUserDialog());
 
         Button deleteUserButton = new Button("Удалить пользователя");
-        deleteUserButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #df6a1b; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+        deleteUserButton.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
+                "-fx-text-fill: #df6a1b; " +
+                "-fx-cursor: hand;");
 
         deleteUserButton.setOnAction(_ -> showDeleteUserDialog());
 
@@ -157,25 +132,13 @@ public class MainWindow {
 
         TextField usernameField = new TextField();
         usernameField.setPromptText("Логин");
-        usernameField.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        usernameField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Пароль");
-        passwordField.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        passwordField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
 
         ComboBox<String> roleComboBox = new ComboBox<>();
         roleComboBox.getItems().addAll("пользователь", "администратор");
@@ -232,14 +195,8 @@ public class MainWindow {
         dialogPane.getStyleClass().add("root");
 
         TextField inputField = loginFiled.getEditor();
-        inputField.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        inputField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
 
         ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
         ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -343,14 +300,8 @@ public class MainWindow {
 
         TextField filterField = new TextField();
         filterField.setMaxWidth(200);
-        filterField.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        filterField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
 
         Button filterButton = new Button("Найти");
         Button resetButton = new Button("Сброс");
