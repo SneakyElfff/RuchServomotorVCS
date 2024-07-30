@@ -29,6 +29,11 @@ public class Form {
     private MainWindow mainWindow; // ссылка на MainWindow
     private ObservableList<Object> editingRowData;
 
+    private static final String COMMON_CSS_STYLE = "-fx-background-color: #04060a; " +
+            "-fx-border-color: #df6a1b; " +
+            "-fx-border-width: 2px; " +
+            "-fx-border-radius: 10px;";
+
     private class InputField {
         Node node;
         String columnName;
@@ -95,12 +100,9 @@ public class Form {
     private VBox createStyledFormBox() {
         VBox formBox = new VBox(10);
         formBox.setAlignment(Pos.TOP_CENTER);
+        formBox.setStyle(COMMON_CSS_STYLE);
         formBox.setStyle(
-                "-fx-background-color: #04060a;" +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px; " +
-                        "-fx-padding: 20px;"
+                "-fx-padding: 20px;"
         );
         return formBox;
     }
@@ -253,14 +255,8 @@ public class Form {
         TextField textField = new TextField();
         textField.setMaxWidth(200);
         textField.setPromptText(promptText);
-        textField.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        textField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
         return textField;
     }
 
@@ -269,15 +265,10 @@ public class Form {
         datePicker.setEditable(false);
         datePicker.setPromptText(promptText);
         datePicker.setMaxWidth(200);
-        datePicker.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+        datePicker.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; " +
+                "-fx-cursor: hand;");
+
         datePicker.getEditor().setStyle(
                 "-fx-background-color: #04060a; " +
                         "-fx-text-fill: #ffffff; " +
@@ -293,14 +284,8 @@ public class Form {
         comboBox.getItems().addAll("Внесение", "Рассмотрение", "Выполнение", "Отклонение");
         comboBox.setPromptText(promptText);
         comboBox.setMaxWidth(200);
-        comboBox.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;"
-        );
+        comboBox.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
         return comboBox;
     }
 
@@ -309,19 +294,13 @@ public class Form {
         textArea.setPromptText(promptText);
         textArea.setPrefRowCount(4);
         textArea.setWrapText(true);
-        textArea.setStyle(
-                "-fx-font-size: 16px; " +
-                        "-fx-control-inner-background: #04060a; " +
-                        "-fx-background-color: #04060a; " +
-                        "-fx-text-fill: #ffffff; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px; " +
-                        "-fx-background-radius: 8px; " +
-                        "-fx-focus-color: transparent; " +
-                        "-fx-faint-focus-color: transparent; " +
-                        "-fx-padding: 4px;"
-        );
+        textArea.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-control-inner-background: #04060a; " +
+                "-fx-text-fill: #ffffff; " +
+                "-fx-background-radius: 8px; " +
+                "-fx-focus-color: transparent; " +
+                "-fx-faint-focus-color: transparent; " +
+                "-fx-padding: 4px;");
 
         textArea.setFocusTraversable(false);
 
