@@ -21,6 +21,13 @@ public class MainWindow {
             "-fx-border-color: #df6a1b; " +
             "-fx-border-width: 2px; " +
             "-fx-border-radius: 10px;";
+    private static final String BUTTON_STYLE = "-fx-font-size: 18px; " +
+            "-fx-background-color: #df6a1b; " +
+            "-fx-text-fill: #04060a; " +
+            "-fx-background-radius: 10px;" +
+            "-fx-cursor: hand;";
+    private static final String TEXT_FIELD_STYLE = COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+            "-fx-text-fill: #ffffff;";
 
     public static void setUserRole(String role) {
         userRole = role;
@@ -84,11 +91,8 @@ public class MainWindow {
 
         Button logoutButton = createLogoutButton(onLogout);
 
-        Button addUserButton = createUserButton("Добавить пользователя");
-        addUserButton.setOnAction(_ -> showAddUserDialog());
-
-        Button deleteUserButton = createUserButton("Удалить пользователя");
-        deleteUserButton.setOnAction(_ -> showDeleteUserDialog());
+        Button addUserButton = createUserButton("Добавить пользователя", this::showAddUserDialog);
+        Button deleteUserButton = createUserButton("Удалить пользователя", this::showDeleteUserDialog);
 
         if (!"администратор".equalsIgnoreCase(userRole)) {
             addUserButton.setVisible(false);
@@ -108,13 +112,7 @@ public class MainWindow {
 
     private Button createLogoutButton (Runnable onLogout) {
         Button logoutButton = new Button("Выйти");
-        logoutButton.setStyle(
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #df6a1b;" +
-                        "-fx-text-fill: #04060a;" +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-cursor: hand;"
-        );
+        logoutButton.setStyle(BUTTON_STYLE);
 
         logoutButton.setOnAction(_ -> {
             toggleMenuPanel(); // Скрыть меню перед выходом
@@ -124,11 +122,13 @@ public class MainWindow {
         return logoutButton;
     }
 
-    private Button createUserButton (String buttonName) {
+    private Button createUserButton(String buttonName, Runnable action) {
         Button button = new Button(buttonName);
         button.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
                 "-fx-text-fill: #df6a1b; " +
                 "-fx-cursor: hand;");
+
+        button.setOnAction(_ -> action.run());
 
         return button;
     }
@@ -140,12 +140,9 @@ public class MainWindow {
         DialogPane dialogPane = dialog.getDialogPane();
         createStyledDialogPane(dialogPane);
 
-        TextField usernameField = createStyledTextField();
+        TextField usernameField = createStyledTextField("Логин");
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Пароль");
-        passwordField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
-                "-fx-text-fill: #ffffff; ");
+        PasswordField passwordField = createStyledPasswordField("Пароль");
 
         ComboBox<String> roleComboBox = new ComboBox<>();
         roleComboBox.getItems().addAll("пользователь", "администратор");
@@ -156,62 +153,67 @@ public class MainWindow {
 
         dialogPane.setContent(signInFields);
 
-        ButtonType okButtonType = createButtonsOfDialogPane(dialogPane);
+        ButtonType okButtonType = createDialogButtons(dialogPane);
 
         dialog.showAndWait().ifPresent(response -> {
             if (response == okButtonType) {
-                String username = usernameField.getText();
-                String password = passwordField.getText();
-                String role = roleComboBox.getValue();
-
-                if (!username.isEmpty() && !password.isEmpty() && role != null) {
-                    try (Connection conn = DatabaseUtil.getConnection();
-                         PreparedStatement pstmt = conn.prepareStatement(
-                                 "INSERT INTO пользователи (Логин, Пароль, Роль) VALUES (?, ?, ?)")) {
-                        pstmt.setString(1, username);
-                        pstmt.setString(2, password);
-                        pstmt.setString(3, role);
-                        pstmt.executeUpdate();
-                    } catch (SQLException e) {
-                        showErrorAlert("Ошибка", "Не удалось добавить пользователя.", e.getMessage());
-                    }
-                } else {
-                    showWarningAlert("Пожалуйста, заполните все поля.");
-                }
+                handleUserAdding(usernameField, passwordField, roleComboBox);
             }
         });
     }
 
-    private void showDeleteUserDialog() {
-        TextInputDialog loginFiled = new TextInputDialog();
-        loginFiled.setTitle("Удалить пользователя");
-        loginFiled.setHeaderText("Введите логин пользователя для удаления:");
+    private void handleUserAdding(TextField usernameField, PasswordField passwordField, ComboBox<String> roleComboBox) {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
+        String role = roleComboBox.getValue();
 
-        DialogPane dialogPane = loginFiled.getDialogPane();
+        if (!username.isEmpty() && !password.isEmpty() && role != null) {
+            try (Connection conn = DatabaseUtil.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement(
+                         "INSERT INTO пользователи (Логин, Пароль, Роль) VALUES (?, ?, ?)")) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, password);
+                pstmt.setString(3, role);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                showErrorAlert("Ошибка", "Не удалось добавить пользователя.", e.getMessage());
+            }
+        } else {
+            showWarningAlert("Пожалуйста, заполните все поля.");
+        }
+    }
+
+    private void showDeleteUserDialog() {
+        TextInputDialog loginDialog = new TextInputDialog();
+        loginDialog.setTitle("Удалить пользователя");
+        loginDialog.setHeaderText("Введите логин пользователя для удаления:");
+
+        DialogPane dialogPane = loginDialog.getDialogPane();
         createStyledDialogPane(dialogPane);
 
-        TextField inputField = loginFiled.getEditor();
-        inputField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
-                "-fx-text-fill: #ffffff; ");
+        TextField inputField = loginDialog.getEditor();
+        inputField.setStyle(TEXT_FIELD_STYLE);
 
-        createButtonsOfDialogPane(dialogPane);
+        createDialogButtons(dialogPane);
 
-        loginFiled.showAndWait().ifPresent(username -> {
-            if (!username.isEmpty()) {
-                try (Connection conn = DatabaseUtil.getConnection();
-                     PreparedStatement pstmt = conn.prepareStatement("DELETE FROM пользователи WHERE Логин = ?")) {
-                    pstmt.setString(1, username);
-                    int rowsAffected = pstmt.executeUpdate();
-                    if (rowsAffected == 0) {
-                        showWarningAlert("Пользователь с логином " + username + " не найден.");
-                    }
-                } catch (SQLException e) {
-                    showErrorAlert("Ошибка", "Не удалось удалить пользователя.", e.getMessage());
+        loginDialog.showAndWait().ifPresent(this::handleDeleteUser);
+    }
+
+    private void handleDeleteUser(String username) {
+        if (!username.isEmpty()) {
+            try (Connection conn = DatabaseUtil.getConnection();
+                 PreparedStatement pstmt = conn.prepareStatement("DELETE FROM пользователи WHERE Логин = ?")) {
+                pstmt.setString(1, username);
+                int rowsAffected = pstmt.executeUpdate();
+                if (rowsAffected == 0) {
+                    showWarningAlert("Пользователь с логином " + username + " не найден.");
                 }
-            } else {
-                showWarningAlert("Пожалуйста, введите логин.");
+            } catch (SQLException e) {
+                showErrorAlert("Ошибка", "Не удалось удалить пользователя.", e.getMessage());
             }
-        });
+        } else {
+            showWarningAlert("Пожалуйста, введите логин.");
+        }
     }
 
     private static void createStyledDialogPane(DialogPane dialogPane) {
@@ -221,16 +223,22 @@ public class MainWindow {
 
     }
 
-    private TextField createStyledTextField() {
+    private TextField createStyledTextField(String promptText) {
         TextField textField = new TextField();
-        textField.setPromptText("Логин");
-        textField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
-                "-fx-text-fill: #ffffff; ");
+        textField.setPromptText(promptText);
+        textField.setStyle(TEXT_FIELD_STYLE);
 
         return textField;
     }
 
-    private ButtonType createButtonsOfDialogPane(DialogPane dialogPane) {
+    private PasswordField createStyledPasswordField(String promptText) {
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText(promptText);
+        passwordField.setStyle(TEXT_FIELD_STYLE);
+        return passwordField;
+    }
+
+    private ButtonType createDialogButtons(DialogPane dialogPane) {
         ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
         ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialogPane.getButtonTypes().setAll(okButtonType, closeButtonType);
