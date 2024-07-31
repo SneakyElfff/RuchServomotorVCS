@@ -312,10 +312,8 @@ public class MainWindow {
                         "-fx-text-fill: #ffffff;"
         );
 
-        TextField filterField = new TextField();
+        TextField filterField = createStyledTextField("");
         filterField.setMaxWidth(200);
-        filterField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
-                "-fx-text-fill: #ffffff; ");
 
         Button filterButton = createStyledButton("Найти");
         Button resetButton = createStyledButton("Сброс");

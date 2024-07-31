@@ -14,6 +14,10 @@ import javafx.stage.Stage;
 public class StartWindow extends Application {
 
     private Scene scene;
+    private static final String COMMON_CSS_STYLE = "-fx-background-color: #04060a; " +
+            "-fx-border-color: #df6a1b; " +
+            "-fx-border-width: 2px; " +
+            "-fx-border-radius: 10px;";
 
     @Override
     public void start(Stage primaryStage) {
@@ -38,13 +42,7 @@ public class StartWindow extends Application {
 
     private BorderPane createRootPane() {
         BorderPane root = new BorderPane();
-        root.setStyle(
-                "-fx-background-color: #04060a;" +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px; " +
-                        "-fx-padding: 10px;" // Внутренний отступ
-        );
+        root.setStyle(COMMON_CSS_STYLE + "-fx-padding: 10px;"); // Внутренний отступ
         return root;
     }
 
@@ -78,13 +76,9 @@ public class StartWindow extends Application {
     private Button createLoginButton(BorderPane root) {
         Button loginButton = new Button("Войти");
         loginButton.setMinWidth(200);
-        loginButton.setStyle(
+        loginButton.setStyle(COMMON_CSS_STYLE +
                 "-fx-font-size: 18px; " +
-                        "-fx-background-color: #04060a; " +
                         "-fx-text-fill: #df6a1b; " +
-                        "-fx-border-color: #df6a1b; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 10px;" +
                         "-fx-cursor: hand;"
         );
 
