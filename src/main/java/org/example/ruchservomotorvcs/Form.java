@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Objects;
 
 public class Form {
-    private Stage formStage;
-    private TableView<ObservableList<Object>> table;
-    private MainWindow mainWindow; // ссылка на MainWindow
+    private final Stage formStage;
+    private final TableView<ObservableList<Object>> table;
+    private final MainWindow mainWindow; // ссылка на MainWindow
     private ObservableList<Object> editingRowData;
 
     private static final String COMMON_CSS_STYLE = "-fx-background-color: #04060a; " +
@@ -34,7 +34,7 @@ public class Form {
             "-fx-border-width: 2px; " +
             "-fx-border-radius: 10px;";
 
-    private class InputField {
+    private static class InputField {
         Node node;
         String columnName;
 
@@ -71,8 +71,8 @@ public class Form {
         List<InputField> inputFields = new ArrayList<>();
 
         HBox headline = createHeadline();
-        GridPane numbersRow = createGridPane(10, 5);
-        GridPane authorsAndDates = createGridPane(10, 10);
+        GridPane numbersRow = createGridPane(5);
+        GridPane authorsAndDates = createGridPane(10);
         VBox textFields = new VBox(10);
 
         try (Connection conn = DatabaseUtil.getConnection()) {
@@ -111,15 +111,15 @@ public class Form {
         return new HBox(10);
     }
 
-    private GridPane createGridPane(int hgap, int vgap) {
+    private GridPane createGridPane(int vgap) {
         GridPane gridPane = new GridPane();
-        gridPane.setHgap(hgap);
+        gridPane.setHgap(10);
         gridPane.setVgap(vgap);
         return gridPane;
     }
 
     private ImageView createLogo() {
-        ImageView logo = new ImageView(new Image(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png").toExternalForm()));
+        ImageView logo = new ImageView(new Image(Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png")).toExternalForm()));
         logo.setFitHeight(50);
         logo.setPreserveRatio(true);
         return logo;
@@ -163,7 +163,7 @@ public class Form {
         } else if (columnName.equals("Статус")) {
             return createStyledComboBox(columnName);
         } else if (columnName.equals("Изображение")) {
-            return createImageUploadButton(columnName);
+            return createImageUploadButton();
         } else if (columnIndex <= 10) {
             return createStyledTextField(columnName);
         } else {
@@ -316,7 +316,7 @@ public class Form {
         return textArea;
     }
 
-    private Node createImageUploadButton(String promptText) {
+    private Node createImageUploadButton() {
         HBox hbox = new HBox(10);
         Button uploadButton = createStyledButton("Выбрать изображение");
 
@@ -324,7 +324,7 @@ public class Form {
         previewImage.setFitHeight(50);
         previewImage.setFitWidth(50);
 
-        uploadButton.setOnAction(e -> {
+        uploadButton.setOnAction(_ -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Выберите изображение");
             fileChooser.getExtensionFilters().addAll(
@@ -339,7 +339,7 @@ public class Form {
             }
         });
 
-        previewImage.setOnMouseClicked(e -> {
+        previewImage.setOnMouseClicked(_ -> {
             if (previewImage.getImage() != null) {
                 Stage imageStage = new Stage();
                 ImageView fullSizeImage = new ImageView(previewImage.getImage());
@@ -472,8 +472,7 @@ public class Form {
     private void setImageParameter(PreparedStatement stmt, int paramIndex, HBox hbox) throws SQLException, FileNotFoundException {
         Button uploadButton = (Button) hbox.getChildren().getFirst();
         Object userData = uploadButton.getUserData();
-        if (userData instanceof File) {
-            File imageFile = (File) userData;
+        if (userData instanceof File imageFile) {
             FileInputStream fis = new FileInputStream(imageFile);
             stmt.setBinaryStream(paramIndex, fis, (int) imageFile.length());
         } else if (userData instanceof byte[]) {

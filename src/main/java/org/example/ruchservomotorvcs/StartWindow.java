@@ -11,6 +11,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.Objects;
+
 public class StartWindow extends Application {
 
     private Scene scene;
@@ -25,7 +27,7 @@ public class StartWindow extends Application {
         BorderPane root = createRootPane();
 
         // Создание вертикального контейнера для центрирования логотипа и кнопки
-        VBox centerBox = createCenterBox(root);
+        VBox centerBox = createCenterBox();
         root.setCenter(centerBox);
 
         // Создание контейнера для копирайта и центрирование его внизу
@@ -46,15 +48,15 @@ public class StartWindow extends Application {
         return root;
     }
 
-    private VBox createCenterBox(BorderPane root) {
+    private VBox createCenterBox() {
         VBox centerBox = new VBox(20);
         centerBox.setAlignment(Pos.CENTER);
 
-        ImageView logo = new ImageView(new Image(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png").toExternalForm()));
+        ImageView logo = new ImageView(new Image(Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/images/logo.png")).toExternalForm()));
         logo.setFitWidth(200);
         logo.setPreserveRatio(true);
 
-        Button loginButton = createLoginButton(root);
+        Button loginButton = createLoginButton();
 
         centerBox.getChildren().addAll(logo, loginButton);
 
@@ -73,7 +75,7 @@ public class StartWindow extends Application {
         return creditsText;
     }
 
-    private Button createLoginButton(BorderPane root) {
+    private Button createLoginButton() {
         Button loginButton = new Button("Войти");
         loginButton.setMinWidth(200);
         loginButton.setStyle(COMMON_CSS_STYLE +
@@ -97,7 +99,7 @@ public class StartWindow extends Application {
         BorderPane root = createRootPane();
 
         // Создание вертикального контейнера для центрирования логотипа и кнопки
-        VBox centerBox = createCenterBox(root);
+        VBox centerBox = createCenterBox();
         root.setCenter(centerBox);
 
         // Создание контейнера для копирайта и центрирование его внизу

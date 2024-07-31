@@ -71,7 +71,7 @@ public class LoginWindow {
         errorLabel.setStyle("-fx-text-fill: red;");
 
         Button submitButton = createStyledButton("Войти");
-        submitButton.setOnAction(event -> handleLogin(usernameField, passwordField, errorLabel, onLoginSuccess));
+        submitButton.setOnAction(_ -> handleLogin(usernameField, passwordField, errorLabel, onLoginSuccess));
 
         usernameField.setFocusTraversable(false);
         passwordField.setFocusTraversable(false);
