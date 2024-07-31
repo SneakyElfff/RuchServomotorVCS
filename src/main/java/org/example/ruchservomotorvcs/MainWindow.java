@@ -84,10 +84,10 @@ public class MainWindow {
 
         Button logoutButton = createLogoutButton(onLogout);
 
-        Button addUserButton = createStyledButton("Добавить пользователя");
+        Button addUserButton = createUserButton("Добавить пользователя");
         addUserButton.setOnAction(_ -> showAddUserDialog());
 
-        Button deleteUserButton = createStyledButton("Удалить пользователя");
+        Button deleteUserButton = createUserButton("Удалить пользователя");
         deleteUserButton.setOnAction(_ -> showDeleteUserDialog());
 
         if (!"администратор".equalsIgnoreCase(userRole)) {
@@ -124,7 +124,7 @@ public class MainWindow {
         return logoutButton;
     }
 
-    private Button createStyledButton (String buttonName) {
+    private Button createUserButton (String buttonName) {
         Button button = new Button(buttonName);
         button.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
                 "-fx-text-fill: #df6a1b; " +
@@ -252,21 +252,9 @@ public class MainWindow {
         HBox buttonBox = new HBox(10);
         buttonBox.setAlignment(Pos.CENTER);
 
-        Button addButton = new Button("Добавить запись");
-        Button editButton = new Button("Редактировать запись");
-        Button deleteButton = new Button("Удалить запись");
-
-        // Стили для кнопок
-        String buttonStyle =
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #df6a1b; " +
-                        "-fx-text-fill: #04060a; " +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-cursor: hand;";
-
-        addButton.setStyle(buttonStyle);
-        editButton.setStyle(buttonStyle);
-        deleteButton.setStyle(buttonStyle);
+        Button addButton = createStyledButton("Добавить запись");
+        Button editButton = createStyledButton("Редактировать запись");
+        Button deleteButton = createStyledButton("Удалить запись");
 
         addButton.setOnAction(_ -> showAddRecordForm());
         editButton.setOnAction(_ -> showEditRecordForm());
@@ -321,18 +309,8 @@ public class MainWindow {
         filterField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
                 "-fx-text-fill: #ffffff; ");
 
-        Button filterButton = new Button("Найти");
-        Button resetButton = new Button("Сброс");
-
-        String filterButtonStyle =
-                "-fx-font-size: 18px; " +
-                        "-fx-background-color: #df6a1b; " +
-                        "-fx-text-fill: #04060a; " +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-cursor: hand;";
-
-        filterButton.setStyle(filterButtonStyle);
-        resetButton.setStyle(filterButtonStyle);
+        Button filterButton = createStyledButton("Найти");
+        Button resetButton = createStyledButton("Сброс");
 
         filterButton.setOnAction(_ -> {
             String filterValue = filterField.getText().trim();
@@ -361,6 +339,19 @@ public class MainWindow {
         filterBox.getChildren().add(filterRow);
 
         return filterBox;
+    }
+
+    private Button createStyledButton(String buttonName) {
+        Button button = new Button(buttonName);
+
+        // Стили для кнопок
+        button.setStyle("-fx-font-size: 18px; " +
+                "-fx-background-color: #df6a1b; " +
+                "-fx-text-fill: #04060a; " +
+                "-fx-background-radius: 10px;" +
+                "-fx-cursor: hand;");
+
+        return button;
     }
 
     private void filterTable(String columnName, String filterValue) throws SQLException {
@@ -528,9 +519,7 @@ public class MainWindow {
         ObservableList<Object> selectedRow = table.getSelectionModel().getSelectedItem();
 
         if (selectedRow != null) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Подтверждение удаления");
-            alert.setHeaderText("Вы уверены, что хотите удалить эту запись?");
+            Alert alert = createAlert(Alert.AlertType.CONFIRMATION, "Подтверждение удаления", "Вы уверены, что хотите удалить эту запись?", "");
 
             DialogPane dialogPane = alert.getDialogPane();
             createStyledDialogPane(dialogPane);
@@ -581,9 +570,7 @@ public class MainWindow {
     }
 
     private void showWarningAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Предупреждение");
-        alert.setHeaderText(message);
+        Alert alert = createAlert(Alert.AlertType.WARNING, "Предупреждение", message, "");
 
         DialogPane dialogPane = alert.getDialogPane();
         createStyledDialogPane(dialogPane);
@@ -592,14 +579,20 @@ public class MainWindow {
     }
 
     static void showErrorAlert(String title, String header, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(header);
-        alert.setContentText(content);
+        Alert alert = createAlert(Alert.AlertType.ERROR, title, header, content);
 
         DialogPane dialogPane = alert.getDialogPane();
         createStyledDialogPane(dialogPane);
 
         alert.showAndWait();
+    }
+
+    private static Alert createAlert(Alert.AlertType type, String title, String header, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        return alert;
     }
 }
