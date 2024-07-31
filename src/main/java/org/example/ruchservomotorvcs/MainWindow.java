@@ -79,11 +79,34 @@ public class MainWindow {
         Label titleLabel = new Label("Меню");
         titleLabel.setStyle("-fx-text-fill: #df6a1b; -fx-font-size: 18px;");
 
-        Separator separator1 = new Separator();
-        separator1.setStyle("-fx-background-color: #df6a1b;");
-        Separator separator2 = new Separator();
-        separator2.setStyle("-fx-background-color: #df6a1b;");
+        Separator separator1 = createSeparator();
+        Separator separator2 = createSeparator();
 
+        Button logoutButton = createLogoutButton(onLogout);
+
+        Button addUserButton = createStyledButton("Добавить пользователя");
+        addUserButton.setOnAction(_ -> showAddUserDialog());
+
+        Button deleteUserButton = createStyledButton("Удалить пользователя");
+        deleteUserButton.setOnAction(_ -> showDeleteUserDialog());
+
+        if (!"администратор".equalsIgnoreCase(userRole)) {
+            addUserButton.setVisible(false);
+            deleteUserButton.setVisible(false);
+        }
+
+        panel.getChildren().addAll(titleLabel, separator1, logoutButton, separator2, addUserButton, deleteUserButton);
+        return panel;
+    }
+
+    private Separator createSeparator() {
+        Separator separator = new Separator();
+        separator.setStyle("-fx-background-color: #df6a1b;");
+
+        return separator;
+    }
+
+    private Button createLogoutButton (Runnable onLogout) {
         Button logoutButton = new Button("Выйти");
         logoutButton.setStyle(
                 "-fx-font-size: 18px; " +
@@ -93,32 +116,21 @@ public class MainWindow {
                         "-fx-cursor: hand;"
         );
 
-        Button addUserButton = new Button("Добавить пользователя");
-        addUserButton.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
-                "-fx-text-fill: #df6a1b; " +
-                "-fx-cursor: hand;");
-
-        addUserButton.setOnAction(_ -> showAddUserDialog());
-
-        Button deleteUserButton = new Button("Удалить пользователя");
-        deleteUserButton.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
-                "-fx-text-fill: #df6a1b; " +
-                "-fx-cursor: hand;");
-
-        deleteUserButton.setOnAction(_ -> showDeleteUserDialog());
-
-        if (!"администратор".equalsIgnoreCase(userRole)) {
-            addUserButton.setVisible(false);
-            deleteUserButton.setVisible(false);
-        }
-
         logoutButton.setOnAction(_ -> {
             toggleMenuPanel(); // Скрыть меню перед выходом
             onLogout.run();
         });
 
-        panel.getChildren().addAll(titleLabel, separator1, logoutButton, separator2, addUserButton, deleteUserButton);
-        return panel;
+        return logoutButton;
+    }
+
+    private Button createStyledButton (String buttonName) {
+        Button button = new Button(buttonName);
+        button.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 18px; " +
+                "-fx-text-fill: #df6a1b; " +
+                "-fx-cursor: hand;");
+
+        return button;
     }
 
     private void showAddUserDialog() {
@@ -126,14 +138,9 @@ public class MainWindow {
         dialog.setTitle("Добавить пользователя");
 
         DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
-        dialogPane.getStyleClass().add("root");
+        createStyledDialogPane(dialogPane);
 
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Логин");
-        usernameField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
-                "-fx-text-fill: #ffffff; ");
+        TextField usernameField = createStyledTextField("Логин");
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Пароль");
@@ -149,16 +156,7 @@ public class MainWindow {
 
         dialogPane.setContent(signInFields);
 
-        ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
-        ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialogPane.getButtonTypes().setAll(okButtonType, closeButtonType);
-
-        Button okButton = (Button) dialogPane.lookupButton(okButtonType);
-        okButton.setDefaultButton(true);
-
-        ButtonBar buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
-        buttonBar.setButtonOrder(ButtonBar.BUTTON_ORDER_NONE);
-        buttonBar.getButtons().setAll(okButton, (Button) dialogPane.lookupButton(closeButtonType));
+        ButtonType okButtonType = createButtonsOfDialogPane(dialogPane);
 
         dialog.showAndWait().ifPresent(response -> {
             if (response == okButtonType) {
@@ -190,24 +188,13 @@ public class MainWindow {
         loginFiled.setHeaderText("Введите логин пользователя для удаления:");
 
         DialogPane dialogPane = loginFiled.getDialogPane();
-        dialogPane.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
-        dialogPane.getStyleClass().add("root");
+        createStyledDialogPane(dialogPane);
 
         TextField inputField = loginFiled.getEditor();
         inputField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
                 "-fx-text-fill: #ffffff; ");
 
-        ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
-        ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
-        dialogPane.getButtonTypes().setAll(okButtonType, closeButtonType);
-
-        Button okButton = (Button) dialogPane.lookupButton(okButtonType);
-        okButton.setDefaultButton(true);
-
-        ButtonBar buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
-        buttonBar.setButtonOrder(ButtonBar.BUTTON_ORDER_NONE);
-        buttonBar.getButtons().setAll(okButton, (Button) dialogPane.lookupButton(closeButtonType));
+        createButtonsOfDialogPane(dialogPane);
 
         loginFiled.showAndWait().ifPresent(username -> {
             if (!username.isEmpty()) {
@@ -225,6 +212,37 @@ public class MainWindow {
                 showWarningAlert("Пожалуйста, введите логин.");
             }
         });
+    }
+
+    private static void createStyledDialogPane(DialogPane dialogPane) {
+        dialogPane.getStylesheets().add(
+                Objects.requireNonNull(MainWindow.class.getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
+        dialogPane.getStyleClass().add("root");
+
+    }
+
+    private TextField createStyledTextField(String textFieldName) {
+        TextField textField = new TextField();
+        textField.setPromptText(textFieldName);
+        textField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
+                "-fx-text-fill: #ffffff; ");
+
+        return textField;
+    }
+
+    private ButtonType createButtonsOfDialogPane(DialogPane dialogPane) {
+        ButtonType okButtonType = new ButtonType("ОК", ButtonBar.ButtonData.OK_DONE);
+        ButtonType closeButtonType = new ButtonType("Закрыть", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialogPane.getButtonTypes().setAll(okButtonType, closeButtonType);
+
+        Button okButton = (Button) dialogPane.lookupButton(okButtonType);
+        okButton.setDefaultButton(true);
+
+        ButtonBar buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
+        buttonBar.setButtonOrder(ButtonBar.BUTTON_ORDER_NONE);
+        buttonBar.getButtons().setAll(okButton, (Button) dialogPane.lookupButton(closeButtonType));
+
+        return okButtonType;
     }
 
     private VBox createMainBox() {
@@ -515,9 +533,7 @@ public class MainWindow {
             alert.setHeaderText("Вы уверены, что хотите удалить эту запись?");
 
             DialogPane dialogPane = alert.getDialogPane();
-            dialogPane.getStylesheets().add(
-                    Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
-            dialogPane.getStyleClass().add("root");
+            createStyledDialogPane(dialogPane);
 
             ButtonType buttonTypeYes = new ButtonType("Да", ButtonBar.ButtonData.YES);
             ButtonType buttonTypeNo = new ButtonType("Нет", ButtonBar.ButtonData.NO);
@@ -570,9 +586,7 @@ public class MainWindow {
         alert.setHeaderText(message);
 
         DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
-        dialogPane.getStyleClass().add("root");
+        createStyledDialogPane(dialogPane);
 
         alert.showAndWait();
     }
@@ -584,9 +598,7 @@ public class MainWindow {
         alert.setContentText(content);
 
         DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(
-                Objects.requireNonNull(MainWindow.class.getResource("/org/example/ruchservomotorvcs/css/styles.css")).toExternalForm());
-        dialogPane.getStyleClass().add("root");
+        createStyledDialogPane(dialogPane);
 
         alert.showAndWait();
     }
