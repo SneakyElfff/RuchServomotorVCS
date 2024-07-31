@@ -140,7 +140,7 @@ public class MainWindow {
         DialogPane dialogPane = dialog.getDialogPane();
         createStyledDialogPane(dialogPane);
 
-        TextField usernameField = createStyledTextField("Логин");
+        TextField usernameField = createStyledTextField();
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Пароль");
@@ -221,9 +221,9 @@ public class MainWindow {
 
     }
 
-    private TextField createStyledTextField(String textFieldName) {
+    private TextField createStyledTextField() {
         TextField textField = new TextField();
-        textField.setPromptText(textFieldName);
+        textField.setPromptText("Логин");
         textField.setStyle(COMMON_CSS_STYLE + "-fx-font-size: 16px; " +
                 "-fx-text-fill: #ffffff; ");
 
@@ -240,7 +240,7 @@ public class MainWindow {
 
         ButtonBar buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
         buttonBar.setButtonOrder(ButtonBar.BUTTON_ORDER_NONE);
-        buttonBar.getButtons().setAll(okButton, (Button) dialogPane.lookupButton(closeButtonType));
+        buttonBar.getButtons().setAll(okButton, dialogPane.lookupButton(closeButtonType));
 
         return okButtonType;
     }
@@ -481,7 +481,7 @@ public class MainWindow {
                     column.setCellValueFactory(param -> {
                         Object value = param.getValue().get(j - 1);
                         if (value instanceof byte[] && ((byte[]) value).length > 0) {
-                            return new SimpleObjectProperty<>("️\u2398");
+                            return new SimpleObjectProperty<>("️⎘");
                         } else {
                             return new SimpleObjectProperty<>("");
                         }
